@@ -57,7 +57,7 @@ export default function ChatPage() {
             onClick={() => setSelectedRoomId(room.id)}
             className={`inline-flex h-10 shrink-0 items-center gap-2 rounded-md px-3 text-sm font-black transition active:scale-95 ${
               selectedRoom?.id === room.id
-                ? "bg-slate-900 text-white dark:bg-cyan-400 dark:text-slate-950"
+                ? "bg-slate-900 text-white dark:bg-red-500 dark:text-white"
                 : "bg-white text-slate-600 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-800"
             }`}
           >

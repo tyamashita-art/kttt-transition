@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "KTTT members private community app.",
     start_url: "/",
     display: "standalone",
-    background_color: "#F8FAFC",
-    theme_color: "#0F172A",
+    background_color: "#F2F3F5",
+    theme_color: "#111217",
     icons: [
       {
         src: "/icon.svg",

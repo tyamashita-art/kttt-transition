@@ -148,7 +148,7 @@ export function ChatRoom({
                   <div
                     className={`rounded-md px-3 py-2 text-sm leading-6 ${
                       mine
-                        ? "bg-cyan-500 font-bold text-slate-950"
+                        ? "bg-accent font-bold text-white"
                         : "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100"
                     }`}
                   >
@@ -175,12 +175,12 @@ export function ChatRoom({
         <input
           name="message"
           placeholder="メッセージ"
-          className="h-11 min-w-0 flex-1 rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-cyan-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
+          className="h-11 min-w-0 flex-1 rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-accent focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
         />
         <button
           type="submit"
           disabled={sending}
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-slate-900 text-white active:scale-95 disabled:opacity-60 dark:bg-cyan-400 dark:text-slate-950"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-slate-900 text-white active:scale-95 disabled:opacity-60 dark:bg-red-500 dark:text-white"
           aria-label="送信"
           title="送信"
         >

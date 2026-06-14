@@ -3,6 +3,7 @@
 import { Loader2, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
+import { getAuthCallbackUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
@@ -20,10 +21,12 @@ export default function SignupPage() {
     setLoading(true);
 
     const supabase = createClient();
+    const normalizedEmail = email.trim().toLowerCase();
     const { error: signUpError } = await supabase.auth.signUp({
-      email,
+      email: normalizedEmail,
       password,
       options: {
+        emailRedirectTo: getAuthCallbackUrl("/login?verified=1"),
         data: {
           display_name: displayName
         }
@@ -37,14 +40,17 @@ export default function SignupPage() {
       return;
     }
 
-    setMessage("登録を受け付けました。確認メールが届いた場合は、リンクを開いてからログインしてください。");
+    setPassword("");
+    setMessage(
+      `${normalizedEmail} に確認メールを送信しました。メール内のリンクを開くと認証が完了し、KTTT Transitionのログイン画面に戻ります。届かない場合は迷惑メールフォルダも確認してください。`
+    );
   }
 
   return (
     <main className="grid min-h-dvh place-items-center bg-canvas px-4 py-8 text-slate-950 dark:bg-slate-950 dark:text-slate-50">
       <div className="w-full max-w-sm">
         <div className="mb-8">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-600 dark:text-cyan-300">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-accent dark:text-red-300">
             Invite only
           </p>
           <h1 className="mt-2 text-3xl font-black">メンバー登録</h1>
@@ -62,7 +68,7 @@ export default function SignupPage() {
             <input
               value={displayName}
               onChange={(event) => setDisplayName(event.target.value)}
-              className="mt-2 w-full rounded-md border border-slate-200 bg-white px-3 py-3 text-base outline-none ring-cyan-400 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
+              className="mt-2 w-full rounded-md border border-slate-200 bg-white px-3 py-3 text-base outline-none ring-accent transition focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
               required
             />
           </label>
@@ -74,7 +80,7 @@ export default function SignupPage() {
               autoComplete="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className="mt-2 w-full rounded-md border border-slate-200 bg-white px-3 py-3 text-base outline-none ring-cyan-400 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
+              className="mt-2 w-full rounded-md border border-slate-200 bg-white px-3 py-3 text-base outline-none ring-accent transition focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
               required
             />
           </label>
@@ -87,7 +93,7 @@ export default function SignupPage() {
               minLength={6}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="mt-2 w-full rounded-md border border-slate-200 bg-white px-3 py-3 text-base outline-none ring-cyan-400 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
+              className="mt-2 w-full rounded-md border border-slate-200 bg-white px-3 py-3 text-base outline-none ring-accent transition focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
               required
             />
           </label>
@@ -99,7 +105,7 @@ export default function SignupPage() {
           ) : null}
 
           {message ? (
-            <p className="mt-4 rounded-md bg-cyan-50 px-3 py-2 text-sm font-bold text-cyan-700 dark:bg-cyan-950 dark:text-cyan-200">
+            <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm font-bold text-red-700 dark:bg-red-950 dark:text-red-200">
               {message}
             </p>
           ) : null}
@@ -107,7 +113,7 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-md bg-slate-900 font-black text-white transition active:scale-[0.99] disabled:opacity-60 dark:bg-cyan-400 dark:text-slate-950"
+            className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-md bg-slate-900 font-black text-white transition active:scale-[0.99] disabled:opacity-60 dark:bg-red-500 dark:text-white"
           >
             {loading ? <Loader2 className="animate-spin" size={18} /> : <UserPlus size={18} />}
             登録する
@@ -116,7 +122,7 @@ export default function SignupPage() {
 
         <p className="mt-5 text-center text-sm text-slate-600 dark:text-slate-300">
           アカウント作成済みなら{" "}
-          <Link href="/login" className="font-black text-cyan-600 dark:text-cyan-300">
+          <Link href="/login" className="font-black text-accent dark:text-red-300">
             ログイン
           </Link>
         </p>

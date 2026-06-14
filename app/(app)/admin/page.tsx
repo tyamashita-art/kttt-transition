@@ -167,12 +167,12 @@ export default function AdminPage() {
             name="email"
             type="email"
             placeholder="email@example.com"
-            className="h-11 min-w-0 rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-cyan-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
+            className="h-11 min-w-0 rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-accent focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
             required
           />
           <select
             name="role"
-            className="h-11 rounded-md border border-slate-200 bg-white px-2 text-sm font-bold outline-none ring-cyan-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
+            className="h-11 rounded-md border border-slate-200 bg-white px-2 text-sm font-bold outline-none ring-accent focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
           >
             <option value="member">member</option>
             <option value="admin">admin</option>
@@ -180,7 +180,7 @@ export default function AdminPage() {
           <button
             type="submit"
             disabled={busy}
-            className="grid h-11 w-11 place-items-center rounded-md bg-slate-900 text-white disabled:opacity-60 dark:bg-cyan-400 dark:text-slate-950"
+            className="grid h-11 w-11 place-items-center rounded-md bg-slate-900 text-white disabled:opacity-60 dark:bg-red-500 dark:text-white"
             aria-label="招待追加"
             title="招待追加"
           >

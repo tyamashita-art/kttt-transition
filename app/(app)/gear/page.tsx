@@ -48,7 +48,7 @@ export default function GearPage() {
         </div>
         <Link
           href="/gear/new"
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-slate-900 text-white shadow-sm active:scale-95 dark:bg-cyan-400 dark:text-slate-950"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-slate-900 text-white shadow-sm active:scale-95 dark:bg-red-500 dark:text-white"
           aria-label="ギア登録"
           title="ギア登録"
         >
@@ -94,7 +94,7 @@ export default function GearPage() {
                   <h3 className="line-clamp-2 font-black leading-5">{item.name}</h3>
                   <StatusPill label={itemStatusLabels[item.status]} tone={statusTone(item.status)} />
                 </div>
-                <p className="mt-2 text-sm font-bold text-cyan-600 dark:text-cyan-300">{item.category}</p>
+                <p className="mt-2 text-sm font-bold text-accent dark:text-red-300">{item.category}</p>
                 <p className="mt-1 truncate text-sm text-slate-500 dark:text-slate-400">
                   所有者: {item.owner?.nickname || item.owner?.display_name || "未設定"}
                 </p>

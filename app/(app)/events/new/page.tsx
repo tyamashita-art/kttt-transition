@@ -74,7 +74,7 @@ export default function NewEventPage() {
         <button
           type="submit"
           disabled={saving}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-md bg-slate-900 font-black text-white active:scale-[0.99] disabled:opacity-60 dark:bg-cyan-400 dark:text-slate-950"
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-md bg-slate-900 font-black text-white active:scale-[0.99] disabled:opacity-60 dark:bg-red-500 dark:text-white"
         >
           {saving ? <Loader2 className="animate-spin" size={18} /> : <CalendarPlus size={18} />}
           作成する
@@ -102,7 +102,7 @@ function Input({
         name={name}
         type={type}
         required={required}
-        className="mt-2 h-12 w-full rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-cyan-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-900"
+        className="mt-2 h-12 w-full rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-accent focus:ring-2 dark:border-slate-700 dark:bg-slate-900"
       />
     </label>
   );
@@ -115,7 +115,7 @@ function Textarea({ label, name, rows }: { label: string; name: string; rows: nu
       <textarea
         name={name}
         rows={rows}
-        className="mt-2 w-full resize-none rounded-md border border-slate-200 bg-white px-3 py-3 text-base leading-6 outline-none ring-cyan-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-900"
+        className="mt-2 w-full resize-none rounded-md border border-slate-200 bg-white px-3 py-3 text-base leading-6 outline-none ring-accent focus:ring-2 dark:border-slate-700 dark:bg-slate-900"
       />
     </label>
   );

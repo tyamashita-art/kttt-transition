@@ -20,7 +20,7 @@ export function AppShell({
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-canvas/95 px-4 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95">
         <div className="mx-auto flex max-w-md items-center justify-between gap-3">
           <Link href="/" className="min-w-0">
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-600 dark:text-cyan-300">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-accent dark:text-red-300">
               Connect Share Train Race
             </p>
             <h1 className="truncate text-xl font-black leading-tight">KTTT Transition</h1>
@@ -29,7 +29,7 @@ export function AppShell({
             {profile?.role === "admin" ? (
               <Link
                 href="/admin"
-                className="rounded-full bg-cyan-500 px-3 py-2 text-xs font-black text-slate-950 shadow-sm active:scale-95"
+                className="rounded-full bg-accent px-3 py-2 text-xs font-black text-white shadow-sm active:scale-95"
               >
                 Admin
               </Link>

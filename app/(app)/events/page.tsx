@@ -48,7 +48,7 @@ export default function EventsPage() {
         </div>
         <Link
           href="/events/new"
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-slate-900 text-white shadow-sm active:scale-95 dark:bg-cyan-400 dark:text-slate-950"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-slate-900 text-white shadow-sm active:scale-95 dark:bg-red-500 dark:text-white"
           aria-label="イベント作成"
           title="イベント作成"
         >
@@ -68,7 +68,7 @@ export default function EventsPage() {
             href={`/events/${event.id}`}
             className="rounded-md border border-slate-200 bg-white p-4 shadow-sm transition active:scale-[0.99] dark:border-slate-800 dark:bg-slate-900"
           >
-            <p className="text-sm font-black text-cyan-600 dark:text-cyan-300">{formatDateTime(event.start_at)}</p>
+            <p className="text-sm font-black text-accent dark:text-red-300">{formatDateTime(event.start_at)}</p>
             <h3 className="mt-1 text-lg font-black leading-6">{event.title}</h3>
             <div className="mt-3 flex flex-wrap gap-3 text-sm font-bold text-slate-500 dark:text-slate-400">
               <span className="inline-flex items-center gap-1">

@@ -137,7 +137,7 @@ export default function EventDetailPage() {
   return (
     <div className="space-y-4">
       <section className="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <p className="text-sm font-black text-cyan-600 dark:text-cyan-300">{formatDateTime(event.start_at)}</p>
+        <p className="text-sm font-black text-accent dark:text-red-300">{formatDateTime(event.start_at)}</p>
         <h2 className="mt-1 text-2xl font-black leading-7">{event.title}</h2>
         <p className="mt-2 font-bold text-slate-600 dark:text-slate-300">{event.location || "場所未定"}</p>
         <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-slate-700 dark:text-slate-200">
@@ -236,7 +236,7 @@ export default function EventDetailPage() {
               <button
                 type="submit"
                 disabled={busy}
-                className="flex h-11 items-center justify-center gap-2 rounded-md bg-slate-900 font-black text-white disabled:opacity-60 dark:bg-cyan-400 dark:text-slate-950"
+                className="flex h-11 items-center justify-center gap-2 rounded-md bg-slate-900 font-black text-white disabled:opacity-60 dark:bg-red-500 dark:text-white"
               >
                 {busy ? <Loader2 className="animate-spin" size={17} /> : <Save size={17} />}
                 保存
@@ -279,7 +279,7 @@ function RsvpButton({
       onClick={onClick}
       className={`flex h-12 items-center justify-center gap-1 rounded-md text-sm font-black transition active:scale-[0.99] disabled:opacity-60 ${
         active
-          ? "bg-slate-900 text-white dark:bg-cyan-400 dark:text-slate-950"
+          ? "bg-slate-900 text-white dark:bg-red-500 dark:text-white"
           : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-200"
       }`}
     >
@@ -318,7 +318,7 @@ function Input({
         type={type}
         defaultValue={defaultValue}
         required={required}
-        className="mt-2 h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-cyan-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
+        className="mt-2 h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-accent focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
       />
     </label>
   );
@@ -342,7 +342,7 @@ function Textarea({
         name={name}
         rows={rows}
         defaultValue={defaultValue}
-        className="mt-2 w-full resize-none rounded-md border border-slate-200 bg-white px-3 py-3 text-base leading-6 outline-none ring-cyan-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
+        className="mt-2 w-full resize-none rounded-md border border-slate-200 bg-white px-3 py-3 text-base leading-6 outline-none ring-accent focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
       />
     </label>
   );

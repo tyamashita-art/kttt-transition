@@ -3,7 +3,13 @@
 import { Loader2, PackagePlus, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
-import { itemCategories, transportMethods } from "@/lib/constants";
+import {
+  availableTypeOptions,
+  itemCategories,
+  itemRegistrationStatusOptions,
+  maxRentalMonthOptions,
+  transportMethods
+} from "@/lib/constants";
 import { uploadPublicImage } from "@/lib/storage";
 import { createClient } from "@/lib/supabase/client";
 
@@ -85,7 +91,7 @@ export default function NewGearPage() {
         <TextArea name="description" label="説明" rows={4} />
         <TextArea name="condition" label="状態" rows={3} />
 
-        <Select name="status" label="貸出ステータス" values={["available", "unavailable"]} />
+        <OptionSelect name="status" label="貸出ステータス" options={itemRegistrationStatusOptions} />
 
         <label className="block text-sm font-black">
           貸出可能タイプ
@@ -93,10 +99,13 @@ export default function NewGearPage() {
             value={availableType}
             name="available_type"
             onChange={(event) => setAvailableType(event.target.value)}
-            className="mt-2 h-12 w-full rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-cyan-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-900"
+            className="mt-2 h-12 w-full rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-accent focus:ring-2 dark:border-slate-700 dark:bg-slate-900"
           >
-            <option value="anytime">いつでも</option>
-            <option value="period">期間指定</option>
+            {availableTypeOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </label>
 
@@ -109,14 +118,17 @@ export default function NewGearPage() {
 
         <label className="block text-sm font-black">
           最大貸出期間
-          <input
+          <select
             name="max_rental_months"
-            type="number"
-            min={1}
-            max={6}
             defaultValue={6}
-            className="mt-2 h-12 w-full rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-cyan-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-900"
-          />
+            className="mt-2 h-12 w-full rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-accent focus:ring-2 dark:border-slate-700 dark:bg-slate-900"
+          >
+            {maxRentalMonthOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </label>
 
         <Select name="transport_method" label="受け渡し方法" values={transportMethods} />
@@ -131,7 +143,7 @@ export default function NewGearPage() {
         <button
           type="submit"
           disabled={saving}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-md bg-slate-900 font-black text-white active:scale-[0.99] disabled:opacity-60 dark:bg-cyan-400 dark:text-slate-950"
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-md bg-slate-900 font-black text-white active:scale-[0.99] disabled:opacity-60 dark:bg-red-500 dark:text-white"
         >
           {saving ? <Loader2 className="animate-spin" size={18} /> : <PackagePlus size={18} />}
           登録する
@@ -189,7 +201,7 @@ function TextInput({
         name={name}
         type={type}
         required={required}
-        className="mt-2 h-12 w-full rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-cyan-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-900"
+        className="mt-2 h-12 w-full rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-accent focus:ring-2 dark:border-slate-700 dark:bg-slate-900"
       />
     </label>
   );
@@ -210,7 +222,7 @@ function TextArea({
       <textarea
         name={name}
         rows={rows}
-        className="mt-2 w-full resize-none rounded-md border border-slate-200 bg-white px-3 py-3 text-base leading-6 outline-none ring-cyan-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-900"
+        className="mt-2 w-full resize-none rounded-md border border-slate-200 bg-white px-3 py-3 text-base leading-6 outline-none ring-accent focus:ring-2 dark:border-slate-700 dark:bg-slate-900"
       />
     </label>
   );
@@ -230,11 +242,37 @@ function Select({
       {label}
       <select
         name={name}
-        className="mt-2 h-12 w-full rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-cyan-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-900"
+        className="mt-2 h-12 w-full rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-accent focus:ring-2 dark:border-slate-700 dark:bg-slate-900"
       >
         {values.map((value) => (
           <option key={value} value={value}>
             {value}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function OptionSelect({
+  label,
+  name,
+  options
+}: {
+  label: string;
+  name: string;
+  options: readonly { value: string; label: string }[];
+}) {
+  return (
+    <label className="block text-sm font-black">
+      {label}
+      <select
+        name={name}
+        className="mt-2 h-12 w-full rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-accent focus:ring-2 dark:border-slate-700 dark:bg-slate-900"
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
           </option>
         ))}
       </select>

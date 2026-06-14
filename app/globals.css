@@ -4,20 +4,20 @@
 
 :root {
   color-scheme: light;
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --muted: #64748b;
-  --border: #e2e8f0;
+  --background: #f2f3f5;
+  --foreground: #111217;
+  --muted: #696b73;
+  --border: #d9dbe0;
   --panel: #ffffff;
 }
 
 .dark {
   color-scheme: dark;
-  --background: #020617;
-  --foreground: #f8fafc;
-  --muted: #94a3b8;
-  --border: #1e293b;
-  --panel: #0f172a;
+  --background: #090a0e;
+  --foreground: #f7f7f8;
+  --muted: #a4a6ad;
+  --border: #292b33;
+  --panel: #17181e;
 }
 
 * {

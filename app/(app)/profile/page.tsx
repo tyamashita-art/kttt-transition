@@ -97,7 +97,7 @@ export default function ProfilePage() {
       <section className="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="flex items-center gap-4">
           <Avatar url={profile.avatar_url} name={profile.display_name} email={profile.email} size="lg" />
-          <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-slate-900 px-4 py-3 text-sm font-black text-white active:scale-[0.99] dark:bg-cyan-400 dark:text-slate-950">
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-slate-900 px-4 py-3 text-sm font-black text-white active:scale-[0.99] dark:bg-red-500 dark:text-white">
             <Upload size={17} />
             写真を変更
             <input
@@ -129,7 +129,7 @@ export default function ProfilePage() {
           </p>
         ) : null}
         {message ? (
-          <p className="rounded-md bg-cyan-50 px-3 py-2 text-sm font-bold text-cyan-700 dark:bg-cyan-950 dark:text-cyan-200">
+          <p className="rounded-md bg-red-50 px-3 py-2 text-sm font-bold text-red-700 dark:bg-red-950 dark:text-red-200">
             {message}
           </p>
         ) : null}
@@ -137,7 +137,7 @@ export default function ProfilePage() {
         <button
           type="submit"
           disabled={saving}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-md bg-slate-900 font-black text-white active:scale-[0.99] disabled:opacity-60 dark:bg-cyan-400 dark:text-slate-950"
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-md bg-slate-900 font-black text-white active:scale-[0.99] disabled:opacity-60 dark:bg-red-500 dark:text-white"
         >
           {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
           保存
@@ -168,7 +168,7 @@ function TextInput({
         type={type}
         defaultValue={defaultValue}
         required={required}
-        className="mt-2 w-full rounded-md border border-slate-200 bg-white px-3 py-3 text-base outline-none ring-cyan-400 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900"
+        className="mt-2 w-full rounded-md border border-slate-200 bg-white px-3 py-3 text-base outline-none ring-accent transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900"
       />
     </label>
   );
@@ -192,7 +192,7 @@ function TextArea({
         name={name}
         defaultValue={defaultValue}
         rows={rows}
-        className="mt-2 w-full resize-none rounded-md border border-slate-200 bg-white px-3 py-3 text-base leading-6 outline-none ring-cyan-400 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900"
+        className="mt-2 w-full resize-none rounded-md border border-slate-200 bg-white px-3 py-3 text-base leading-6 outline-none ring-accent transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900"
       />
     </label>
   );

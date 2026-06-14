@@ -71,7 +71,7 @@ export default function MembersPage() {
               <div className="flex items-center gap-2">
                 <h3 className="truncate font-black">{profile.display_name || "名前未設定"}</h3>
                 {profile.role === "admin" ? (
-                  <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-black text-cyan-700 dark:bg-cyan-950 dark:text-cyan-200">
+                  <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-black text-red-700 dark:bg-red-950 dark:text-red-200">
                     admin
                   </span>
                 ) : null}

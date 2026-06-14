@@ -1,7 +1,7 @@
-type Tone = "cyan" | "green" | "amber" | "red" | "slate";
+type Tone = "accent" | "green" | "amber" | "red" | "slate";
 
 const toneClass: Record<Tone, string> = {
-  cyan: "bg-cyan-50 text-cyan-700 ring-cyan-200 dark:bg-cyan-950 dark:text-cyan-200 dark:ring-cyan-800",
+  accent: "bg-red-50 text-red-700 ring-red-200 dark:bg-red-950 dark:text-red-200 dark:ring-red-800",
   green:
     "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950 dark:text-emerald-200 dark:ring-emerald-800",
   amber:
@@ -15,7 +15,7 @@ export function statusTone(status?: string | null): Tone {
   if (!status) return "slate";
   if (["available", "going", "returned"].includes(status)) return "green";
   if (["requested", "maybe", "return_requested"].includes(status)) return "amber";
-  if (["borrowed", "team", "event", "rental"].includes(status)) return "cyan";
+  if (["borrowed", "team", "event", "rental"].includes(status)) return "accent";
   if (["unavailable", "rejected", "overdue", "not_going"].includes(status)) return "red";
   return "slate";
 }

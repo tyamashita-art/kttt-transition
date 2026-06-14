@@ -30,7 +30,7 @@ export function Avatar({
 
   return (
     <div
-      className={`${sizeClass} grid place-items-center rounded-full bg-slate-900 font-black text-white ring-2 ring-white dark:bg-cyan-400 dark:text-slate-950 dark:ring-slate-900`}
+      className={`${sizeClass} grid place-items-center rounded-full bg-slate-900 font-black text-white ring-2 ring-white dark:bg-red-500 dark:text-white dark:ring-slate-900`}
     >
       {initials(name, email)}
     </div>

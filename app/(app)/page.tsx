@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, CalendarDays, ChevronRight, Clock, MessageCircle, PackageCheck } from "lucide-react";
+import { Bell, CalendarDays, ChevronRight, Clock, MessageCircle, PackageCheck, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { EmptyState } from "@/components/empty-state";
@@ -9,6 +9,7 @@ import { StatusPill, statusTone } from "@/components/status-pill";
 import { rentalStatusLabels } from "@/lib/constants";
 import type { Database } from "@/lib/database.types";
 import { formatDate, formatDateTime } from "@/lib/format";
+import { teamConcept } from "@/lib/team-concept";
 import { createClient } from "@/lib/supabase/client";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -97,11 +98,23 @@ export default function HomePage() {
   return (
     <div className="space-y-4">
       <section className="rounded-md bg-slate-900 p-5 text-white shadow-soft dark:bg-slate-900">
-        <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-300">KTTT Transition</p>
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-red-300">KTTT Transition</p>
         <h2 className="mt-2 text-2xl font-black leading-8">
           {profile.nickname || profile.display_name || "メンバー"}さん、今日も動ける準備を。
         </h2>
       </section>
+
+      <DashboardCard icon={<Sparkles size={18} />} title="チーム概要" href="/about">
+        <div className="rounded-md bg-slate-50 p-3 dark:bg-slate-950">
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-accent dark:text-red-300">
+            {teamConcept.subtitle}
+          </p>
+          <p className="mt-2 text-lg font-black leading-6">{teamConcept.tagline}</p>
+          <p className="mt-2 line-clamp-3 text-sm font-bold leading-6 text-slate-600 dark:text-slate-300">
+            {teamConcept.body[1]}
+          </p>
+        </div>
+      </DashboardCard>
 
       <DashboardCard
         icon={<CalendarDays size={18} />}
@@ -181,7 +194,7 @@ export default function HomePage() {
           <div className="space-y-3">
             {messages.map((message) => (
               <div key={message.id} className="rounded-md bg-slate-50 p-3 dark:bg-slate-950">
-                <p className="text-xs font-black text-cyan-600 dark:text-cyan-300">
+                <p className="text-xs font-black text-accent dark:text-red-300">
                   {message.room?.title || "チャット"} · {message.profile?.nickname || message.profile?.display_name || "メンバー"}
                 </p>
                 <p className="mt-1 line-clamp-2 text-sm font-bold leading-5">{message.message}</p>

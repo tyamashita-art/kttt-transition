@@ -28,7 +28,7 @@ export function BottomNav() {
               href={tab.href}
               className={`flex h-14 flex-col items-center justify-center rounded-md text-[11px] font-bold transition active:scale-95 ${
                 isActive
-                  ? "bg-slate-900 text-white dark:bg-cyan-400 dark:text-slate-950"
+                  ? "bg-slate-900 text-white dark:bg-red-500 dark:text-white"
                   : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900"
               }`}
             >

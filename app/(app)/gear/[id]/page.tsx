@@ -8,8 +8,12 @@ import { Avatar } from "@/components/avatar";
 import { LoadingCard } from "@/components/loading-card";
 import { StatusPill, statusTone } from "@/components/status-pill";
 import {
+  availableTypeLabels,
+  availableTypeOptions,
   itemCategories,
   itemStatusLabels,
+  itemStatusOptions,
+  maxRentalMonthOptions,
   rentalStatusLabels,
   transportMethods
 } from "@/lib/constants";
@@ -232,7 +236,7 @@ export default function GearDetailPage() {
         <div className="p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-sm font-black text-cyan-600 dark:text-cyan-300">{item.category}</p>
+              <p className="text-sm font-black text-accent dark:text-red-300">{item.category}</p>
               <h2 className="mt-1 text-2xl font-black leading-7">{item.name}</h2>
             </div>
             <StatusPill label={itemStatusLabels[item.status]} tone={statusTone(item.status)} />
@@ -259,7 +263,7 @@ export default function GearDetailPage() {
         <h3 className="font-black">貸出条件</h3>
         <div className="mt-3 grid gap-2 text-sm">
           <Row label="状態" value={item.condition || "未設定"} />
-          <Row label="貸出タイプ" value={item.available_type === "anytime" ? "いつでも" : "期間指定"} />
+          <Row label="貸出タイプ" value={availableTypeLabels[item.available_type] || item.available_type} />
           <Row label="貸出可能期間" value={`${formatDate(item.available_from)} - ${formatDate(item.available_until)}`} />
           <Row label="最大貸出期間" value={`${item.max_rental_months}ヶ月`} />
           <Row label="受け渡し方法" value={item.transport_method} />
@@ -268,7 +272,7 @@ export default function GearDetailPage() {
       </section>
 
       {message ? (
-        <p className="rounded-md bg-cyan-50 px-3 py-2 text-sm font-bold text-cyan-700 dark:bg-cyan-950 dark:text-cyan-200">
+        <p className="rounded-md bg-red-50 px-3 py-2 text-sm font-bold text-red-700 dark:bg-red-950 dark:text-red-200">
           {message}
         </p>
       ) : null}
@@ -291,7 +295,7 @@ export default function GearDetailPage() {
             <button
               type="submit"
               disabled={busy}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-md bg-slate-900 font-black text-white active:scale-[0.99] disabled:opacity-60 dark:bg-cyan-400 dark:text-slate-950"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-md bg-slate-900 font-black text-white active:scale-[0.99] disabled:opacity-60 dark:bg-red-500 dark:text-white"
             >
               {busy ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
               申請する
@@ -309,7 +313,7 @@ export default function GearDetailPage() {
               type="button"
               disabled={busy}
               onClick={() => requestReturn(userRequest.id)}
-              className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-slate-900 font-black text-white active:scale-[0.99] disabled:opacity-60 dark:bg-cyan-400 dark:text-slate-950"
+              className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-slate-900 font-black text-white active:scale-[0.99] disabled:opacity-60 dark:bg-red-500 dark:text-white"
             >
               <Undo2 size={17} />
               返却完了を申請
@@ -345,26 +349,26 @@ export default function GearDetailPage() {
             <Input name="image" label="写真" type="file" />
             <Textarea name="description" label="説明" rows={3} defaultValue={item.description || ""} />
             <Textarea name="condition" label="状態" rows={2} defaultValue={item.condition || ""} />
-            <Select
+            <OptionSelect
               name="status"
               label="貸出ステータス"
-              values={["available", "requested", "borrowed", "unavailable"]}
+              options={itemStatusOptions}
               defaultValue={item.status}
             />
-            <Select
+            <OptionSelect
               name="available_type"
               label="貸出可能タイプ"
-              values={["anytime", "period"]}
+              options={availableTypeOptions}
               defaultValue={item.available_type}
             />
             <div className="grid grid-cols-2 gap-3">
               <Input name="available_from" label="開始日" type="date" defaultValue={item.available_from || ""} />
               <Input name="available_until" label="終了日" type="date" defaultValue={item.available_until || ""} />
             </div>
-            <Input
+            <OptionSelect
               name="max_rental_months"
               label="最大貸出期間"
-              type="number"
+              options={maxRentalMonthOptions}
               defaultValue={String(item.max_rental_months)}
             />
             <Select
@@ -378,7 +382,7 @@ export default function GearDetailPage() {
               <button
                 type="submit"
                 disabled={busy}
-                className="flex h-11 items-center justify-center gap-2 rounded-md bg-slate-900 font-black text-white active:scale-[0.99] disabled:opacity-60 dark:bg-cyan-400 dark:text-slate-950"
+                className="flex h-11 items-center justify-center gap-2 rounded-md bg-slate-900 font-black text-white active:scale-[0.99] disabled:opacity-60 dark:bg-red-500 dark:text-white"
               >
                 {busy ? <Loader2 className="animate-spin" size={17} /> : <Save size={17} />}
                 保存
@@ -418,7 +422,7 @@ function RentalSummary({ request, room }: { request: RentalRequest; room?: ChatR
         {room ? (
           <Link
             href={`/chat?room=${room.id}`}
-            className="inline-flex items-center gap-1 rounded-md bg-cyan-500 px-3 py-2 text-xs font-black text-slate-950"
+            className="inline-flex items-center gap-1 rounded-md bg-accent px-3 py-2 text-xs font-black text-white"
           >
             <MessageCircle size={15} />
             チャット
@@ -484,7 +488,7 @@ function RentalCard({
       {room ? (
         <Link
           href={`/chat?room=${room.id}`}
-          className="mt-3 inline-flex items-center gap-1 rounded-md bg-cyan-500 px-3 py-2 text-xs font-black text-slate-950"
+          className="mt-3 inline-flex items-center gap-1 rounded-md bg-accent px-3 py-2 text-xs font-black text-white"
         >
           <MessageCircle size={15} />
           貸出チャット
@@ -532,7 +536,7 @@ function RentalCard({
             <button
               type="submit"
               disabled={busy}
-              className="flex h-11 items-center justify-center gap-2 rounded-md bg-slate-900 font-black text-white disabled:opacity-60 dark:bg-cyan-400 dark:text-slate-950"
+              className="flex h-11 items-center justify-center gap-2 rounded-md bg-slate-900 font-black text-white disabled:opacity-60 dark:bg-red-500 dark:text-white"
             >
               <Check size={17} />
               承認
@@ -555,7 +559,7 @@ function RentalCard({
           type="button"
           disabled={busy}
           onClick={() => onConfirmReturn(request.id)}
-          className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-slate-900 font-black text-white active:scale-[0.99] disabled:opacity-60 dark:bg-cyan-400 dark:text-slate-950"
+          className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-slate-900 font-black text-white active:scale-[0.99] disabled:opacity-60 dark:bg-red-500 dark:text-white"
         >
           <Check size={17} />
           返却確認
@@ -586,7 +590,7 @@ function Input({
         type={type}
         defaultValue={defaultValue}
         required={required}
-        className="mt-2 h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-cyan-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
+        className="mt-2 h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-accent focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
       />
     </label>
   );
@@ -609,11 +613,40 @@ function Select({
       <select
         name={name}
         defaultValue={defaultValue}
-        className="mt-2 h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-cyan-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
+        className="mt-2 h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-accent focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
       >
         {values.map((value) => (
           <option key={value} value={value}>
             {value}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function OptionSelect({
+  label,
+  name,
+  options,
+  defaultValue
+}: {
+  label: string;
+  name: string;
+  options: readonly { value: string; label: string }[];
+  defaultValue?: string;
+}) {
+  return (
+    <label className="block min-w-0 text-sm font-black">
+      {label}
+      <select
+        name={name}
+        defaultValue={defaultValue}
+        className="mt-2 h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-accent focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
           </option>
         ))}
       </select>
@@ -642,7 +675,7 @@ function Textarea({
         rows={rows}
         defaultValue={defaultValue}
         onChange={(event) => onChange?.(event.target.value)}
-        className="mt-2 w-full resize-none rounded-md border border-slate-200 bg-white px-3 py-3 text-base leading-6 outline-none ring-cyan-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
+        className="mt-2 w-full resize-none rounded-md border border-slate-200 bg-white px-3 py-3 text-base leading-6 outline-none ring-accent focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
       />
     </label>
   );

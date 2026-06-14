@@ -40,13 +40,13 @@ export default function MemberDetailPage() {
           <Avatar url={profile.avatar_url} name={profile.display_name} email={profile.email} size="lg" />
           <div className="min-w-0 flex-1">
             <h2 className="text-2xl font-black">{profile.display_name || "名前未設定"}</h2>
-            <p className="mt-1 font-bold text-cyan-600 dark:text-cyan-300">
+            <p className="mt-1 font-bold text-accent dark:text-red-300">
               {profile.nickname ? `@${profile.nickname}` : profile.email}
             </p>
             {currentUserId === profile.id ? (
               <Link
                 href="/profile"
-                className="mt-4 inline-flex rounded-md bg-slate-900 px-4 py-2 text-sm font-black text-white dark:bg-cyan-400 dark:text-slate-950"
+                className="mt-4 inline-flex rounded-md bg-slate-900 px-4 py-2 text-sm font-black text-white dark:bg-red-500 dark:text-white"
               >
                 プロフィール編集
               </Link>
