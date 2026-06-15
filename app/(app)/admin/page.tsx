@@ -38,8 +38,8 @@ export default function AdminPage() {
     const [profilesResult, allowedResult, itemsResult, eventsResult] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("allowed_emails").select("*").order("created_at", { ascending: false }),
-      supabase.from("items").select("*").order("created_at", { ascending: false }).limit(20),
-      supabase.from("events").select("*").order("start_at", { ascending: false }).limit(20)
+      supabase.from("items").select("*").is("deleted_at", null).order("created_at", { ascending: false }).limit(20),
+      supabase.from("events").select("*").is("deleted_at", null).order("start_at", { ascending: false }).limit(20)
     ]);
 
     setProfiles(profilesResult.data || []);
@@ -108,7 +108,7 @@ export default function AdminPage() {
     if (!window.confirm("このギアを削除しますか？")) return;
     await run(async () => {
       const supabase = createClient();
-      const { error: deleteError } = await supabase.from("items").delete().eq("id", id);
+      const { error: deleteError } = await supabase.rpc("delete_item", { p_item_id: id });
       if (deleteError) throw deleteError;
     });
   }
@@ -117,7 +117,7 @@ export default function AdminPage() {
     if (!window.confirm("このイベントを削除しますか？")) return;
     await run(async () => {
       const supabase = createClient();
-      const { error: deleteError } = await supabase.from("events").delete().eq("id", id);
+      const { error: deleteError } = await supabase.rpc("delete_event", { p_event_id: id });
       if (deleteError) throw deleteError;
     });
   }

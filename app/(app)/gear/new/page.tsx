@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import {
   availableTypeOptions,
-  itemCategories,
+  gearCategoryGroupNames,
+  getGearCategoryItems,
   itemRegistrationStatusOptions,
   maxRentalMonthOptions,
   transportMethods
@@ -18,7 +19,11 @@ export default function NewGearPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [categoryGroup, setCategoryGroup] = useState<string>("スイム");
+  const [categoryItem, setCategoryItem] = useState<string>("ウェットスーツ");
   const [availableType, setAvailableType] = useState("anytime");
+  const [isLendable, setIsLendable] = useState(true);
+  const [isSellable, setIsSellable] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,22 +47,36 @@ export default function NewGearPage() {
 
     const formData = new FormData(event.currentTarget);
     const supabase = createClient();
+    const lendable = formData.get("is_lendable") === "on";
+    const sellable = formData.get("is_sellable") === "on";
+    const salePriceValue = String(formData.get("sale_price") || "").trim();
+
+    if (!lendable && !sellable) {
+      setError("貸出可または販売可を少なくとも1つ選んでください。");
+      setSaving(false);
+      return;
+    }
 
     try {
       const imageUrl = imageFile
         ? await uploadPublicImage({ bucket: "item-images", userId, file: imageFile })
         : null;
 
-      const { data, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from("items")
         .insert({
           owner_id: userId,
           name: String(formData.get("name") || ""),
-          category: String(formData.get("category") || "その他"),
+          category: categoryItem,
+          category_group: categoryGroup,
+          category_item: categoryItem,
           image_url: imageUrl,
           description: String(formData.get("description") || ""),
           condition: String(formData.get("condition") || ""),
-          status: String(formData.get("status") || "available") as "available",
+          status: lendable ? (String(formData.get("status") || "available") as "available") : "unavailable",
+          is_lendable: lendable,
+          is_sellable: sellable,
+          sale_price: sellable && salePriceValue ? Number(salePriceValue) : null,
           available_type: availableType as "anytime" | "period",
           available_from: String(formData.get("available_from") || "") || null,
           available_until: String(formData.get("available_until") || "") || null,
@@ -69,7 +88,7 @@ export default function NewGearPage() {
         .single();
 
       if (insertError) throw insertError;
-      router.replace(`/gear/${data.id}`);
+      router.replace("/gear?created=1");
       router.refresh();
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "登録に失敗しました。");
@@ -87,9 +106,48 @@ export default function NewGearPage() {
       <form onSubmit={onSubmit} className="space-y-4">
         <ImagePicker preview={imagePreview} onChange={onImageChange} />
         <TextInput name="name" label="ギア名" required />
-        <Select name="category" label="カテゴリ" values={itemCategories} />
+        <div className="grid grid-cols-2 gap-3">
+          <Select
+            name="category_group"
+            label="大カテゴリ"
+            values={gearCategoryGroupNames}
+            value={categoryGroup}
+            onChange={(value) => {
+              const nextItem = getGearCategoryItems(value)[0];
+              setCategoryGroup(value);
+              setCategoryItem(nextItem);
+            }}
+          />
+          <Select
+            name="category_item"
+            label="小カテゴリ"
+            values={getGearCategoryItems(categoryGroup)}
+            value={categoryItem}
+            onChange={setCategoryItem}
+          />
+        </div>
         <TextArea name="description" label="説明" rows={4} />
         <TextArea name="condition" label="状態" rows={3} />
+
+        <section className="rounded-md border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
+          <p className="text-sm font-black">掲載タイプ</p>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <CheckOption
+              name="is_lendable"
+              label="貸出可"
+              checked={isLendable}
+              onChange={setIsLendable}
+            />
+            <CheckOption
+              name="is_sellable"
+              label="販売可"
+              checked={isSellable}
+              onChange={setIsSellable}
+            />
+          </div>
+        </section>
+
+        {isSellable ? <TextInput name="sale_price" label="販売価格（円）" type="number" /> : null}
 
         <OptionSelect name="status" label="貸出ステータス" options={itemRegistrationStatusOptions} />
 
@@ -231,17 +289,26 @@ function TextArea({
 function Select({
   label,
   name,
-  values
+  values,
+  value,
+  defaultValue,
+  onChange
 }: {
   label: string;
   name: string;
   values: readonly string[];
+  value?: string;
+  defaultValue?: string;
+  onChange?: (value: string) => void;
 }) {
   return (
     <label className="block text-sm font-black">
       {label}
       <select
         name={name}
+        value={value}
+        defaultValue={defaultValue}
+        onChange={(event) => onChange?.(event.target.value)}
         className="mt-2 h-12 w-full rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-accent focus:ring-2 dark:border-slate-700 dark:bg-slate-900"
       >
         {values.map((value) => (
@@ -250,6 +317,37 @@ function Select({
           </option>
         ))}
       </select>
+    </label>
+  );
+}
+
+function CheckOption({
+  name,
+  label,
+  checked,
+  onChange
+}: {
+  name: string;
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <label
+      className={`flex h-12 items-center justify-center rounded-md text-sm font-black ring-1 transition ${
+        checked
+          ? "bg-slate-900 text-white ring-slate-900 dark:bg-red-500 dark:ring-red-500"
+          : "bg-slate-50 text-slate-600 ring-slate-200 dark:bg-slate-950 dark:text-slate-300 dark:ring-slate-800"
+      }`}
+    >
+      <input
+        type="checkbox"
+        name={name}
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        className="sr-only"
+      />
+      {label}
     </label>
   );
 }

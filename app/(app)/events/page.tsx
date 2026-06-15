@@ -21,7 +21,7 @@ export default function EventsPage() {
   useEffect(() => {
     const supabase = createClient();
     Promise.all([
-      supabase.from("events").select("*").order("start_at", { ascending: true }),
+      supabase.from("events").select("*").is("deleted_at", null).order("start_at", { ascending: true }),
       supabase.from("event_participants").select("*")
     ]).then(([eventsResult, participantsResult]) => {
       setEvents(eventsResult.data || []);

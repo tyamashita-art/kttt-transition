@@ -41,13 +41,19 @@ export default function EventDetailPage() {
     const userId = userResult.data.user?.id;
 
     const [eventResult, profileResult, participantsResult, roomResult] = await Promise.all([
-      supabase.from("events").select("*").eq("id", params.id).single(),
+      supabase.from("events").select("*").eq("id", params.id).is("deleted_at", null).single(),
       userId ? supabase.from("profiles").select("*").eq("id", userId).single() : Promise.resolve({ data: null }),
       supabase
         .from("event_participants")
         .select("*, profile:profiles!event_participants_user_id_fkey(display_name,nickname,avatar_url,email)")
         .eq("event_id", params.id),
-      supabase.from("chat_rooms").select("*").eq("room_type", "event").eq("related_id", params.id).maybeSingle()
+      supabase
+        .from("chat_rooms")
+        .select("*")
+        .eq("room_type", "event")
+        .eq("related_id", params.id)
+        .is("deleted_at", null)
+        .maybeSingle()
     ]);
 
     setEvent(eventResult.data);
@@ -121,7 +127,7 @@ export default function EventDetailPage() {
     if (!window.confirm("このイベントを削除しますか？")) return;
     setBusy(true);
     const supabase = createClient();
-    const { error: deleteError } = await supabase.from("events").delete().eq("id", event.id);
+    const { error: deleteError } = await supabase.rpc("delete_event", { p_event_id: event.id });
     setBusy(false);
     if (deleteError) {
       setError(deleteError.message);

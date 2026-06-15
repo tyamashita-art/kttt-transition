@@ -1,13 +1,25 @@
-export const itemCategories = [
-  "Garmin",
-  "ホイール",
-  "DHバー",
-  "スマートトレーナー",
-  "ウェットスーツ",
-  "パワーメーター",
-  "サイクルコンピューター",
-  "その他"
-] as const;
+export const gearCategoryGroups = {
+  "スイム": ["ウェットスーツ", "ゴーグル・キャップ", "練習道具", "その他"],
+  "バイク": ["バイク本体", "ヘルメット・シューズ", "パーツ・ホイール", "小物", "その他"],
+  "ラン": ["シューズ", "ウェア・帽子", "小物", "その他"],
+  "ウェア": ["トライスーツ", "サイクルウェア", "ランウェア", "チームウェア", "その他"],
+  "ガジェット": ["時計", "サイクルコンピューター", "センサー類", "その他"],
+  "補給・ケア": ["補給食", "ボトル", "ケア用品", "その他"],
+  "バッグ・遠征": ["トランジションバッグ", "バイクケース", "遠征バッグ", "その他"],
+  "工具・メンテ": ["工具", "空気入れ", "オイル・洗浄", "その他"],
+  "その他": ["その他"]
+} as const;
+
+export const gearCategoryGroupNames = Object.keys(gearCategoryGroups) as Array<keyof typeof gearCategoryGroups>;
+
+export function getGearCategoryItems(group?: string | null) {
+  if (group && group in gearCategoryGroups) {
+    return gearCategoryGroups[group as keyof typeof gearCategoryGroups];
+  }
+  return gearCategoryGroups["その他"];
+}
+
+export const itemCategories = Array.from(new Set(Object.values(gearCategoryGroups).flat())) as string[];
 
 export const transportMethods = [
   "所有者が持参",
@@ -66,4 +78,9 @@ export const participantStatusLabels: Record<string, string> = {
   going: "参加",
   maybe: "未定",
   not_going: "不参加"
+};
+
+export const gearRequestStatusLabels: Record<string, string> = {
+  open: "募集中",
+  resolved: "解決済み"
 };

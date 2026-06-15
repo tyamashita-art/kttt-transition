@@ -14,6 +14,7 @@ export type RentalStatus =
 export type EventParticipantStatus = "going" | "not_going" | "maybe";
 export type RoomType = "team" | "event" | "rental";
 export type NotificationKind = "rental_due_soon" | "rental_due_today" | "rental_overdue" | "system";
+export type GearRequestStatus = "open" | "resolved";
 
 export interface Database {
   public: {
@@ -74,10 +75,15 @@ export interface Database {
           owner_id: string;
           name: string;
           category: string;
+          category_group: string | null;
+          category_item: string | null;
           description: string | null;
           image_url: string | null;
           condition: string | null;
           status: ItemStatus;
+          is_lendable: boolean;
+          is_sellable: boolean;
+          sale_price: number | null;
           available_type: AvailableType;
           available_from: string | null;
           available_until: string | null;
@@ -86,16 +92,22 @@ export interface Database {
           transport_note: string | null;
           created_at: string;
           updated_at: string;
+          deleted_at: string | null;
         };
         Insert: {
           id?: string;
           owner_id: string;
           name: string;
           category: string;
+          category_group?: string | null;
+          category_item?: string | null;
           description?: string | null;
           image_url?: string | null;
           condition?: string | null;
           status?: ItemStatus;
+          is_lendable?: boolean;
+          is_sellable?: boolean;
+          sale_price?: number | null;
           available_type?: AvailableType;
           available_from?: string | null;
           available_until?: string | null;
@@ -104,6 +116,7 @@ export interface Database {
           transport_note?: string | null;
           created_at?: string;
           updated_at?: string;
+          deleted_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["items"]["Insert"]>;
         Relationships: [];
@@ -161,6 +174,7 @@ export interface Database {
           created_by: string;
           created_at: string;
           updated_at: string;
+          deleted_at: string | null;
         };
         Insert: {
           id?: string;
@@ -172,6 +186,7 @@ export interface Database {
           created_by: string;
           created_at?: string;
           updated_at?: string;
+          deleted_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["events"]["Insert"]>;
         Relationships: [];
@@ -203,6 +218,7 @@ export interface Database {
           related_id: string | null;
           title: string | null;
           created_at: string;
+          deleted_at: string | null;
         };
         Insert: {
           id?: string;
@@ -210,6 +226,7 @@ export interface Database {
           related_id?: string | null;
           title?: string | null;
           created_at?: string;
+          deleted_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["chat_rooms"]["Insert"]>;
         Relationships: [];
@@ -258,6 +275,56 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["notifications"]["Insert"]>;
         Relationships: [];
       };
+      notices: {
+        Row: {
+          id: string;
+          author_id: string;
+          title: string;
+          body: string;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          author_id: string;
+          title: string;
+          body: string;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["notices"]["Insert"]>;
+        Relationships: [];
+      };
+      gear_requests: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          detail: string | null;
+          desired_start_date: string | null;
+          desired_end_date: string | null;
+          status: GearRequestStatus;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          detail?: string | null;
+          desired_start_date?: string | null;
+          desired_end_date?: string | null;
+          status?: GearRequestStatus;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["gear_requests"]["Insert"]>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -297,6 +364,18 @@ export interface Database {
       confirm_rental_return: {
         Args: {
           p_request_id: string;
+        };
+        Returns: void;
+      };
+      delete_item: {
+        Args: {
+          p_item_id: string;
+        };
+        Returns: void;
+      };
+      delete_event: {
+        Args: {
+          p_event_id: string;
         };
         Returns: void;
       };

@@ -14,7 +14,7 @@ import { createClient } from "@/lib/supabase/client";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 type Event = Database["public"]["Tables"]["events"]["Row"];
-type Notification = Database["public"]["Tables"]["notifications"]["Row"];
+type Notice = Database["public"]["Tables"]["notices"]["Row"];
 type Rental = Database["public"]["Tables"]["rental_requests"]["Row"] & {
   item?: {
     name: string;
@@ -34,10 +34,10 @@ type Message = Database["public"]["Tables"]["chat_messages"]["Row"] & {
 
 export default function HomePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [nextEvent, setNextEvent] = useState<Event | null>(null);
+  const [nextEvents, setNextEvents] = useState<Event[]>([]);
   const [myRentals, setMyRentals] = useState<Rental[]>([]);
   const [pendingApprovals, setPendingApprovals] = useState<Rental[]>([]);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notices, setNotices] = useState<Notice[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -48,16 +48,16 @@ export default function HomePage() {
 
       await supabase.rpc("generate_rental_due_alerts");
 
-      const [profileResult, eventsResult, rentalsResult, approvalsResult, notificationsResult, messagesResult] =
+      const [profileResult, eventsResult, rentalsResult, approvalsResult, noticesResult, messagesResult] =
         await Promise.all([
           supabase.from("profiles").select("*").eq("id", data.user.id).single(),
           supabase
             .from("events")
             .select("*")
+            .is("deleted_at", null)
             .gte("start_at", new Date().toISOString())
             .order("start_at", { ascending: true })
-            .limit(1)
-            .maybeSingle(),
+            .limit(3),
           supabase
             .from("rental_requests")
             .select("*, item:items(name,image_url)")
@@ -71,23 +71,23 @@ export default function HomePage() {
             .eq("status", "requested")
             .order("created_at", { ascending: false }),
           supabase
-            .from("notifications")
+            .from("notices")
             .select("*")
-            .eq("user_id", data.user.id)
+            .is("deleted_at", null)
             .order("created_at", { ascending: false })
-            .limit(5),
+            .limit(3),
           supabase
             .from("chat_messages")
             .select("*, room:chat_rooms(title,room_type), profile:profiles!chat_messages_user_id_fkey(display_name,nickname)")
             .order("created_at", { ascending: false })
             .limit(5)
-        ]);
+      ]);
 
       setProfile(profileResult.data);
-      setNextEvent(eventsResult.data);
+      setNextEvents(eventsResult.data || []);
       setMyRentals((rentalsResult.data || []) as unknown as Rental[]);
       setPendingApprovals((approvalsResult.data || []) as unknown as Rental[]);
-      setNotifications(notificationsResult.data || []);
+      setNotices(noticesResult.data || []);
       setMessages((messagesResult.data || []) as unknown as Message[]);
       setLoading(false);
     });
@@ -104,32 +104,41 @@ export default function HomePage() {
         </h2>
       </section>
 
-      <DashboardCard icon={<Sparkles size={18} />} title="チーム概要" href="/about">
-        <div className="rounded-md bg-slate-50 p-3 dark:bg-slate-950">
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-accent dark:text-red-300">
-            {teamConcept.subtitle}
-          </p>
-          <p className="mt-2 text-lg font-black leading-6">{teamConcept.tagline}</p>
-          <p className="mt-2 line-clamp-3 text-sm font-bold leading-6 text-slate-600 dark:text-slate-300">
-            {teamConcept.body[1]}
-          </p>
-        </div>
-      </DashboardCard>
-
       <DashboardCard
         icon={<CalendarDays size={18} />}
         title="次回イベント"
-        href={nextEvent ? `/events/${nextEvent.id}` : "/events"}
+        href={nextEvents[0] ? `/events/${nextEvents[0].id}` : "/events"}
       >
-        {nextEvent ? (
-          <div>
-            <p className="font-black">{nextEvent.title}</p>
-            <p className="mt-1 text-sm font-bold text-slate-500 dark:text-slate-400">
-              {formatDateTime(nextEvent.start_at)} · {nextEvent.location || "場所未定"}
-            </p>
+        {nextEvents.length > 0 ? (
+          <div className="space-y-3">
+            {nextEvents.map((event) => (
+              <Link key={event.id} href={`/events/${event.id}`} className="block rounded-md bg-slate-50 p-3 dark:bg-slate-950">
+                <p className="font-black">{event.title}</p>
+                <p className="mt-1 text-sm font-bold text-slate-500 dark:text-slate-400">
+                  {formatDateTime(event.start_at)} · {event.location || "場所未定"}
+                </p>
+              </Link>
+            ))}
           </div>
         ) : (
           <EmptyState title="予定されているイベントはありません" />
+        )}
+      </DashboardCard>
+
+      <DashboardCard icon={<MessageCircle size={18} />} title="新着チャット" href="/chat">
+        {messages.length === 0 ? (
+          <EmptyState title="新着チャットはありません" />
+        ) : (
+          <div className="space-y-3">
+            {messages.map((message) => (
+              <div key={message.id} className="rounded-md bg-slate-50 p-3 dark:bg-slate-950">
+                <p className="text-xs font-black text-accent dark:text-red-300">
+                  {message.room?.title || "チャット"} · {message.profile?.nickname || message.profile?.display_name || "メンバー"}
+                </p>
+                <p className="mt-1 line-clamp-2 text-sm font-bold leading-5">{message.message}</p>
+              </div>
+            ))}
+          </div>
         )}
       </DashboardCard>
 
@@ -170,38 +179,31 @@ export default function HomePage() {
         )}
       </DashboardCard>
 
-      <DashboardCard icon={<Bell size={18} />} title="チームお知らせ" href="/profile">
-        {notifications.length === 0 ? (
-          <EmptyState title="新しいお知らせはありません" />
+      <DashboardCard icon={<Bell size={18} />} title="チームお知らせ" href="/notices">
+        {notices.length === 0 ? (
+          <EmptyState title="お知らせはまだありません" />
         ) : (
           <div className="space-y-3">
-            {notifications.map((notification) => (
-              <div key={notification.id} className="rounded-md bg-slate-50 p-3 dark:bg-slate-950">
-                <p className="font-black">{notification.title}</p>
-                {notification.body ? (
-                  <p className="mt-1 text-sm font-bold text-slate-500 dark:text-slate-400">{notification.body}</p>
-                ) : null}
+            {notices.map((notice) => (
+              <div key={notice.id} className="rounded-md bg-slate-50 p-3 dark:bg-slate-950">
+                <p className="font-black">{notice.title}</p>
+                <p className="mt-1 line-clamp-2 text-sm font-bold text-slate-500 dark:text-slate-400">{notice.body}</p>
               </div>
             ))}
           </div>
         )}
       </DashboardCard>
 
-      <DashboardCard icon={<MessageCircle size={18} />} title="新着チャット" href="/chat">
-        {messages.length === 0 ? (
-          <EmptyState title="新着チャットはありません" />
-        ) : (
-          <div className="space-y-3">
-            {messages.map((message) => (
-              <div key={message.id} className="rounded-md bg-slate-50 p-3 dark:bg-slate-950">
-                <p className="text-xs font-black text-accent dark:text-red-300">
-                  {message.room?.title || "チャット"} · {message.profile?.nickname || message.profile?.display_name || "メンバー"}
-                </p>
-                <p className="mt-1 line-clamp-2 text-sm font-bold leading-5">{message.message}</p>
-              </div>
-            ))}
-          </div>
-        )}
+      <DashboardCard icon={<Sparkles size={18} />} title="チーム概要" href="/about">
+        <div className="rounded-md bg-slate-50 p-3 dark:bg-slate-950">
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-accent dark:text-red-300">
+            {teamConcept.subtitle}
+          </p>
+          <p className="mt-2 text-lg font-black leading-6">{teamConcept.tagline}</p>
+          <p className="mt-2 line-clamp-3 text-sm font-bold leading-6 text-slate-600 dark:text-slate-300">
+            {teamConcept.body[1]}
+          </p>
+        </div>
       </DashboardCard>
     </div>
   );

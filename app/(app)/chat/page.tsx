@@ -25,7 +25,7 @@ export default function ChatPage() {
       if (!data.user) return;
       const [profileResult, roomsResult] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", data.user.id).single(),
-        supabase.from("chat_rooms").select("*").order("created_at", { ascending: true })
+        supabase.from("chat_rooms").select("*").is("deleted_at", null).order("created_at", { ascending: true })
       ]);
       const nextRooms = roomsResult.data || [];
       setProfile(profileResult.data);

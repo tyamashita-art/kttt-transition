@@ -25,7 +25,7 @@ export default function NewEventPage() {
     setError(null);
     const formData = new FormData(event.currentTarget);
     const supabase = createClient();
-    const { data, error: insertError } = await supabase
+    const { error: insertError } = await supabase
       .from("events")
       .insert({
         title: String(formData.get("title") || ""),
@@ -47,7 +47,7 @@ export default function NewEventPage() {
       return;
     }
 
-    router.replace(`/events/${data.id}`);
+    router.replace("/events?created=1");
     router.refresh();
   }
 

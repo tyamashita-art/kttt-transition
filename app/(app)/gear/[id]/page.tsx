@@ -10,7 +10,8 @@ import { StatusPill, statusTone } from "@/components/status-pill";
 import {
   availableTypeLabels,
   availableTypeOptions,
-  itemCategories,
+  gearCategoryGroupNames,
+  getGearCategoryItems,
   itemStatusLabels,
   itemStatusOptions,
   maxRentalMonthOptions,
@@ -51,6 +52,10 @@ export default function GearDetailPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [requests, setRequests] = useState<RentalRequest[]>([]);
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
+  const [editCategoryGroup, setEditCategoryGroup] = useState("その他");
+  const [editCategoryItem, setEditCategoryItem] = useState("その他");
+  const [editLendable, setEditLendable] = useState(true);
+  const [editSellable, setEditSellable] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -66,6 +71,7 @@ export default function GearDetailPage() {
         .from("items")
         .select("*, owner:profiles!items_owner_id_fkey(id,display_name,nickname,avatar_url,email)")
         .eq("id", params.id)
+        .is("deleted_at", null)
         .single(),
       userId ? supabase.from("profiles").select("*").eq("id", userId).single() : Promise.resolve({ data: null }),
       supabase
@@ -81,7 +87,14 @@ export default function GearDetailPage() {
         ? await supabase.from("chat_rooms").select("*").eq("room_type", "rental").in("related_id", roomIds)
         : { data: [] };
 
-    setItem(itemResult.data as unknown as Item);
+    const nextItem = itemResult.data as unknown as Item | null;
+    setItem(nextItem);
+    if (nextItem) {
+      setEditCategoryGroup(nextItem.category_group || "その他");
+      setEditCategoryItem(nextItem.category_item || nextItem.category || "その他");
+      setEditLendable(nextItem.is_lendable);
+      setEditSellable(nextItem.is_sellable);
+    }
     setProfile(profileResult.data as Profile | null);
     setRequests((requestsResult.data || []) as unknown as RentalRequest[]);
     setRooms((roomsResult.data || []) as ChatRoom[]);
@@ -177,6 +190,15 @@ export default function GearDetailPage() {
     if (!item || !profile) return;
     const formData = new FormData(event.currentTarget);
     const file = formData.get("image");
+    const lendable = formData.get("is_lendable") === "on";
+    const sellable = formData.get("is_sellable") === "on";
+    const salePriceValue = String(formData.get("sale_price") || "").trim();
+
+    if (!lendable && !sellable) {
+      setError("貸出可または販売可を少なくとも1つ選んでください。");
+      return;
+    }
+
     await runAction(async () => {
       const imageUrl =
         file instanceof File && file.size > 0
@@ -187,11 +209,16 @@ export default function GearDetailPage() {
         .from("items")
         .update({
           name: String(formData.get("name") || ""),
-          category: String(formData.get("category") || "その他"),
+          category: editCategoryItem,
+          category_group: editCategoryGroup,
+          category_item: editCategoryItem,
           description: String(formData.get("description") || ""),
           image_url: imageUrl,
           condition: String(formData.get("condition") || ""),
-          status: String(formData.get("status") || item.status) as never,
+          status: lendable ? (String(formData.get("status") || item.status) as never) : "unavailable",
+          is_lendable: lendable,
+          is_sellable: sellable,
+          sale_price: sellable && salePriceValue ? Number(salePriceValue) : null,
           available_type: String(formData.get("available_type") || "anytime") as never,
           available_from: String(formData.get("available_from") || "") || null,
           available_until: String(formData.get("available_until") || "") || null,
@@ -209,7 +236,7 @@ export default function GearDetailPage() {
     if (!window.confirm("このギアを削除しますか？")) return;
     setBusy(true);
     const supabase = createClient();
-    const { error: deleteError } = await supabase.from("items").delete().eq("id", item.id);
+    const { error: deleteError } = await supabase.rpc("delete_item", { p_item_id: item.id });
     setBusy(false);
     if (deleteError) {
       setError(deleteError.message);
@@ -236,10 +263,18 @@ export default function GearDetailPage() {
         <div className="p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-sm font-black text-accent dark:text-red-300">{item.category}</p>
+              <p className="text-sm font-black text-accent dark:text-red-300">
+                {item.category_group || "その他"} / {item.category_item || item.category}
+              </p>
               <h2 className="mt-1 text-2xl font-black leading-7">{item.name}</h2>
             </div>
-            <StatusPill label={itemStatusLabels[item.status]} tone={statusTone(item.status)} />
+            {item.is_lendable ? <StatusPill label={itemStatusLabels[item.status]} tone={statusTone(item.status)} /> : null}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {item.is_lendable ? <MiniBadge label="貸出可" /> : null}
+            {item.is_sellable ? (
+              <MiniBadge label={`販売可 ${item.sale_price ? `${item.sale_price.toLocaleString()}円` : "価格相談"}`} />
+            ) : null}
           </div>
           <div className="mt-4 flex items-center gap-3">
             <Avatar
@@ -263,6 +298,8 @@ export default function GearDetailPage() {
         <h3 className="font-black">貸出条件</h3>
         <div className="mt-3 grid gap-2 text-sm">
           <Row label="状態" value={item.condition || "未設定"} />
+          <Row label="掲載タイプ" value={`${item.is_lendable ? "貸出可" : ""}${item.is_lendable && item.is_sellable ? " / " : ""}${item.is_sellable ? "販売可" : ""}`} />
+          <Row label="販売価格" value={item.is_sellable ? (item.sale_price ? `${item.sale_price.toLocaleString()}円` : "価格相談") : "販売なし"} />
           <Row label="貸出タイプ" value={availableTypeLabels[item.available_type] || item.available_type} />
           <Row label="貸出可能期間" value={`${formatDate(item.available_from)} - ${formatDate(item.available_until)}`} />
           <Row label="最大貸出期間" value={`${item.max_rental_months}ヶ月`} />
@@ -282,7 +319,7 @@ export default function GearDetailPage() {
         </p>
       ) : null}
 
-      {!canManage && item.status === "available" && !userRequest ? (
+      {!canManage && item.is_lendable && item.status === "available" && !userRequest ? (
         <section className="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <h3 className="font-black">借用申請</h3>
           <form onSubmit={requestRental} className="mt-3 space-y-3">
@@ -345,10 +382,44 @@ export default function GearDetailPage() {
           <h3 className="font-black">ギア編集</h3>
           <form onSubmit={updateItem} className="mt-3 space-y-3">
             <Input name="name" label="ギア名" defaultValue={item.name} required />
-            <Select name="category" label="カテゴリ" values={itemCategories} defaultValue={item.category} />
+            <div className="grid grid-cols-2 gap-3">
+              <Select
+                name="category_group"
+                label="大カテゴリ"
+                values={gearCategoryGroupNames}
+                value={editCategoryGroup}
+                onChange={(value) => {
+                  const nextItem = getGearCategoryItems(value)[0];
+                  setEditCategoryGroup(value);
+                  setEditCategoryItem(nextItem);
+                }}
+              />
+              <Select
+                name="category_item"
+                label="小カテゴリ"
+                values={getGearCategoryItems(editCategoryGroup)}
+                value={editCategoryItem}
+                onChange={setEditCategoryItem}
+              />
+            </div>
             <Input name="image" label="写真" type="file" />
             <Textarea name="description" label="説明" rows={3} defaultValue={item.description || ""} />
             <Textarea name="condition" label="状態" rows={2} defaultValue={item.condition || ""} />
+            <section className="rounded-md border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
+              <p className="text-sm font-black">掲載タイプ</p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <CheckOption name="is_lendable" label="貸出可" checked={editLendable} onChange={setEditLendable} />
+                <CheckOption name="is_sellable" label="販売可" checked={editSellable} onChange={setEditSellable} />
+              </div>
+            </section>
+            {editSellable ? (
+              <Input
+                name="sale_price"
+                label="販売価格（円）"
+                type="number"
+                defaultValue={item.sale_price ? String(item.sale_price) : ""}
+              />
+            ) : null}
             <OptionSelect
               name="status"
               label="貸出ステータス"
@@ -411,6 +482,14 @@ function Row({ label, value }: { label: string; value: string }) {
       <span className="font-bold text-slate-500 dark:text-slate-400">{label}</span>
       <span className="min-w-0 whitespace-pre-wrap font-bold">{value}</span>
     </div>
+  );
+}
+
+function MiniBadge({ label }: { label: string }) {
+  return (
+    <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-black text-slate-600 dark:bg-slate-800 dark:text-slate-200">
+      {label}
+    </span>
   );
 }
 
@@ -600,12 +679,16 @@ function Select({
   label,
   name,
   values,
-  defaultValue
+  defaultValue,
+  value,
+  onChange
 }: {
   label: string;
   name: string;
   values: readonly string[];
   defaultValue?: string;
+  value?: string;
+  onChange?: (value: string) => void;
 }) {
   return (
     <label className="block min-w-0 text-sm font-black">
@@ -613,6 +696,8 @@ function Select({
       <select
         name={name}
         defaultValue={defaultValue}
+        value={value}
+        onChange={(event) => onChange?.(event.target.value)}
         className="mt-2 h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-accent focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
       >
         {values.map((value) => (
@@ -621,6 +706,37 @@ function Select({
           </option>
         ))}
       </select>
+    </label>
+  );
+}
+
+function CheckOption({
+  name,
+  label,
+  checked,
+  onChange
+}: {
+  name: string;
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <label
+      className={`flex h-11 items-center justify-center rounded-md text-sm font-black ring-1 transition ${
+        checked
+          ? "bg-slate-900 text-white ring-slate-900 dark:bg-red-500 dark:ring-red-500"
+          : "bg-slate-50 text-slate-600 ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-800"
+      }`}
+    >
+      <input
+        type="checkbox"
+        name={name}
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        className="sr-only"
+      />
+      {label}
     </label>
   );
 }
