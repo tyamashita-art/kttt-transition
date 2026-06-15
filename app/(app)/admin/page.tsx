@@ -151,7 +151,7 @@ export default function AdminPage() {
           <Shield size={22} />
           管理
         </h2>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">招待、ロール、主要データを管理します。</p>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">管理者ロール予約、ロール、主要データを管理します。</p>
       </section>
 
       {error ? (
@@ -161,7 +161,7 @@ export default function AdminPage() {
       ) : null}
 
       <section className="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <h3 className="font-black">招待メール管理</h3>
+        <h3 className="font-black">管理者ロール予約</h3>
         <form onSubmit={addInvite} className="mt-3 grid grid-cols-[1fr_6.5rem_auto] gap-2">
           <input
             name="email"
@@ -181,8 +181,8 @@ export default function AdminPage() {
             type="submit"
             disabled={busy}
             className="grid h-11 w-11 place-items-center rounded-md bg-slate-900 text-white disabled:opacity-60 dark:bg-red-500 dark:text-white"
-            aria-label="招待追加"
-            title="招待追加"
+            aria-label="ロール予約追加"
+            title="ロール予約追加"
           >
             {busy ? <Loader2 className="animate-spin" size={18} /> : <MailPlus size={18} />}
           </button>
@@ -198,8 +198,8 @@ export default function AdminPage() {
                 type="button"
                 onClick={() => removeInvite(invite.id)}
                 className="grid h-9 w-9 place-items-center rounded-md bg-rose-600 text-white"
-                aria-label="招待削除"
-                title="招待削除"
+                aria-label="ロール予約削除"
+                title="ロール予約削除"
               >
                 <Trash2 size={16} />
               </button>

@@ -1,5 +1,5 @@
 -- KTTT Transition MVP v1.0
--- Run this once in the Supabase SQL editor, then add the first admin email to allowed_emails.
+-- Run this once in the Supabase SQL editor.
 
 create extension if not exists "pgcrypto";
 create extension if not exists "citext";
@@ -268,15 +268,11 @@ security definer
 set search_path = public
 as $$
 declare
-  invite public.allowed_emails%rowtype;
+  invited_role public.profile_role;
 begin
-  select * into invite
+  select role into invited_role
   from public.allowed_emails
   where email = new.email::citext;
-
-  if not found then
-    raise exception 'This email address is not invited to KTTT Transition.';
-  end if;
 
   insert into public.profiles (
     id,
@@ -288,11 +284,14 @@ begin
     new.id,
     new.email::citext,
     coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1)),
-    invite.role
+    coalesce(invited_role, 'member'::public.profile_role)
   )
   on conflict (id) do update set
     email = excluded.email,
-    role = excluded.role,
+    role = case
+      when public.profiles.role = 'admin' then public.profiles.role
+      else excluded.role
+    end,
     updated_at = now();
 
   return new;
@@ -955,6 +954,6 @@ begin
   end if;
 end $$;
 
--- Bootstrap example:
+-- Optional admin role pre-assignment example:
 -- insert into public.allowed_emails(email, role) values ('you@example.com', 'admin')
 -- on conflict (email) do update set role = excluded.role;

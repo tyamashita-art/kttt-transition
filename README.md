@@ -6,7 +6,16 @@ KTTT members-only community MVP built with Next.js App Router, TypeScript, Tailw
 
 1. Create a Supabase project.
 2. Run [`supabase/schema.sql`](./supabase/schema.sql) in the Supabase SQL editor.
-3. Bootstrap the first admin invite in the SQL editor:
+   - For an existing project that already ran the old invite-only schema, run [`supabase/migrations/20260615_allow_public_signup.sql`](./supabase/migrations/20260615_allow_public_signup.sql) once in the SQL editor.
+3. Create your first account from the signup screen, then promote it to admin in the SQL editor:
+
+```sql
+update public.profiles
+set role = 'admin'
+where email = 'you@example.com';
+```
+
+Optional: `allowed_emails` can still be used to pre-assign an admin role before signup, but it no longer blocks public signup:
 
 ```sql
 insert into public.allowed_emails(email, role)
@@ -52,14 +61,15 @@ npm run dev
 
 ## Implemented MVP Scope
 
-- Invite-gated email/password auth through Supabase Auth and `allowed_emails`.
+- Public email/password signup through Supabase Auth with required email confirmation.
+- Optional `allowed_emails` admin role pre-assignment without blocking normal member signup.
 - Email confirmation callback with local/production redirect handling.
 - Profiles, member list, profile detail, and profile image upload.
 - Gear registration, image upload, owner/admin editing, rental request, approval, rejection, return request, return confirmation.
 - In-app due alerts for 3 days before, due date, and overdue rentals.
 - Event creation, edit/delete by creator/admin, RSVP, participants, and event chat.
 - Team, event, and rental Realtime chat.
-- Admin invite management, role management, gear management, and event management.
+- Admin role reservation management, role management, gear management, and event management.
 - Mobile-first UI with bottom navigation, dark mode, responsive layout, and PWA manifest/service worker.
 
 ## Checks

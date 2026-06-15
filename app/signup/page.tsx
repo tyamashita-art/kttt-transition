@@ -51,11 +51,11 @@ export default function SignupPage() {
       <div className="w-full max-w-sm">
         <div className="mb-8">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-accent dark:text-red-300">
-            Invite only
+            Email verification
           </p>
           <h1 className="mt-2 text-3xl font-black">メンバー登録</h1>
           <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
-            allowed_emailsに登録済みのメールアドレスだけが参加できます。
+            メール認証後にログインできます。登録後に届く確認メールのリンクを開いてください。
           </p>
         </div>
 
