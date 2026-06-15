@@ -6,6 +6,24 @@ import { FormEvent, useState } from "react";
 import { getAuthCallbackUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/client";
 
+function getSignupErrorMessage(message: string) {
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes("email rate limit exceeded")) {
+    return "確認メールの送信上限に達しました。しばらく時間をおいてから再度お試しください。すでに確認メールが届いている場合は、最新のメール内リンクを開いてください。";
+  }
+
+  if (normalized.includes("user already registered") || normalized.includes("already registered")) {
+    return "このメールアドレスはすでに登録されています。ログイン画面からログインしてください。";
+  }
+
+  if (normalized.includes("password")) {
+    return "パスワードを確認してください。6文字以上で設定できます。";
+  }
+
+  return message;
+}
+
 export default function SignupPage() {
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
@@ -36,7 +54,7 @@ export default function SignupPage() {
     setLoading(false);
 
     if (signUpError) {
-      setError(signUpError.message);
+      setError(getSignupErrorMessage(signUpError.message));
       return;
     }
 
