@@ -31,7 +31,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 NEXT_PUBLIC_SITE_URL=https://kttt-transition.vercel.app
 ```
 
-`NEXT_PUBLIC_SITE_URL` is used for production email confirmation redirects. In local development, the app automatically uses the current localhost origin instead.
+`NEXT_PUBLIC_SITE_URL` is used for email confirmation redirects. Keep it set to the production URL so confirmation emails always return to the deployed app, even when signup is tested from a local development server.
 
 5. Configure Supabase Authentication.
 
@@ -47,10 +47,11 @@ Then open **Authentication -> URL Configuration**:
   - `https://kttt-transition.vercel.app/**`
   - `http://localhost:3000/**`
   - `http://localhost:3001/**`
+  - `http://localhost:3002/**`
 
 The app sends signup confirmation links to `/auth/callback?next=/login?verified=1`. That callback exchanges the Supabase auth code, then returns the user to the login screen with a success message. `/dashboard` also exists as an alias for `/`.
 
-When the local app is opened on `127.0.0.1`, signup confirmation redirects are normalized to `localhost` so they match the allowed Supabase redirect URLs above.
+When `NEXT_PUBLIC_SITE_URL` is set, local signup and resend actions also generate production confirmation redirects. Remove `NEXT_PUBLIC_SITE_URL` only when you intentionally need local auth callback testing.
 
 6. Start the app:
 

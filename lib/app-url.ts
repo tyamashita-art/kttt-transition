@@ -9,6 +9,9 @@ function normalizeOrigin(value?: string) {
 }
 
 export function getAppOrigin() {
+  const configuredSiteUrl = normalizeOrigin(process.env.NEXT_PUBLIC_SITE_URL);
+  if (configuredSiteUrl) return configuredSiteUrl;
+
   if (typeof window !== "undefined") {
     if (window.location.hostname === "127.0.0.1") {
       return `http://localhost${window.location.port ? `:${window.location.port}` : ""}`;
@@ -18,11 +21,8 @@ export function getAppOrigin() {
       return window.location.origin;
     }
 
-    return normalizeOrigin(process.env.NEXT_PUBLIC_SITE_URL) || window.location.origin;
+    return window.location.origin;
   }
-
-  const configuredSiteUrl = normalizeOrigin(process.env.NEXT_PUBLIC_SITE_URL);
-  if (configuredSiteUrl) return configuredSiteUrl;
 
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
