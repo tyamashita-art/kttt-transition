@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, UserPlus } from "lucide-react";
+import { Loader2, MailCheck, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { getAuthCallbackUrl } from "@/lib/app-url";
@@ -14,7 +14,7 @@ function getSignupErrorMessage(message: string) {
   }
 
   if (normalized.includes("user already registered") || normalized.includes("already registered")) {
-    return "このメールアドレスはすでに登録されています。ログイン画面からログインしてください。";
+    return "このメールアドレスはすでに登録されています。メール認証がまだの場合は「確認メールを再送」を押してください。認証済みの場合はログインしてください。";
   }
 
   if (normalized.includes("password")) {
@@ -31,6 +31,7 @@ export default function SignupPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -61,6 +62,39 @@ export default function SignupPage() {
     setPassword("");
     setMessage(
       `${normalizedEmail} に確認メールを送信しました。メール内のリンクを開くと認証が完了し、KTTT Transitionのログイン画面に戻ります。届かない場合は迷惑メールフォルダも確認してください。`
+    );
+  }
+
+  async function resendConfirmation() {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail) {
+      setError("確認メールを再送するメールアドレスを入力してください。");
+      return;
+    }
+
+    setError(null);
+    setMessage(null);
+    setResending(true);
+
+    const supabase = createClient();
+    const { error: resendError } = await supabase.auth.resend({
+      type: "signup",
+      email: normalizedEmail,
+      options: {
+        emailRedirectTo: getAuthCallbackUrl("/login?verified=1")
+      }
+    });
+
+    setResending(false);
+
+    if (resendError) {
+      setError(getSignupErrorMessage(resendError.message));
+      return;
+    }
+
+    setMessage(
+      `${normalizedEmail} に確認メールを再送しました。最新のメール内リンクを開いてメール認証を完了してください。`
     );
   }
 
@@ -130,11 +164,21 @@ export default function SignupPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || resending}
             className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-md bg-slate-900 font-black text-white transition active:scale-[0.99] disabled:opacity-60 dark:bg-red-500 dark:text-white"
           >
             {loading ? <Loader2 className="animate-spin" size={18} /> : <UserPlus size={18} />}
             登録する
+          </button>
+
+          <button
+            type="button"
+            onClick={resendConfirmation}
+            disabled={loading || resending || !email.trim()}
+            className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white font-black text-slate-800 transition active:scale-[0.99] disabled:opacity-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+          >
+            {resending ? <Loader2 className="animate-spin" size={18} /> : <MailCheck size={18} />}
+            確認メールを再送
           </button>
         </form>
 

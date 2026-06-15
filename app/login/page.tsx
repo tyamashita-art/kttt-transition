@@ -1,10 +1,21 @@
 "use client";
 
-import { Loader2, LogIn } from "lucide-react";
+import { Loader2, LogIn, MailCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
+import { getAuthCallbackUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/client";
+
+function getAuthErrorMessage(message: string) {
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes("email rate limit exceeded")) {
+    return "確認メールの送信上限に達しました。しばらく時間をおいてから再度お試しください。";
+  }
+
+  return message;
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,6 +24,7 @@ export default function LoginPage() {
   const [info, setInfo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -49,6 +61,37 @@ export default function LoginPage() {
 
     router.replace("/");
     router.refresh();
+  }
+
+  async function resendConfirmation() {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail) {
+      setError("確認メールを再送するメールアドレスを入力してください。");
+      return;
+    }
+
+    setError(null);
+    setInfo(null);
+    setResending(true);
+
+    const supabase = createClient();
+    const { error: resendError } = await supabase.auth.resend({
+      type: "signup",
+      email: normalizedEmail,
+      options: {
+        emailRedirectTo: getAuthCallbackUrl("/login?verified=1")
+      }
+    });
+
+    setResending(false);
+
+    if (resendError) {
+      setError(getAuthErrorMessage(resendError.message));
+      return;
+    }
+
+    setInfo(`${normalizedEmail} に確認メールを再送しました。最新のメール内リンクを開いてください。`);
   }
 
   return (
@@ -106,11 +149,21 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || resending}
             className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-md bg-slate-900 font-black text-white transition active:scale-[0.99] disabled:opacity-60 dark:bg-red-500 dark:text-white"
           >
             {loading ? <Loader2 className="animate-spin" size={18} /> : <LogIn size={18} />}
             ログイン
+          </button>
+
+          <button
+            type="button"
+            onClick={resendConfirmation}
+            disabled={loading || resending || !email.trim()}
+            className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white font-black text-slate-800 transition active:scale-[0.99] disabled:opacity-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+          >
+            {resending ? <Loader2 className="animate-spin" size={18} /> : <MailCheck size={18} />}
+            確認メールを再送
           </button>
         </form>
 
