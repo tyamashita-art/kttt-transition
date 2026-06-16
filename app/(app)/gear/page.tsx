@@ -25,6 +25,7 @@ type Item = Database["public"]["Tables"]["items"]["Row"] & {
 };
 type GearRequest = Database["public"]["Tables"]["gear_requests"]["Row"] & {
   profile?: {
+    id: string;
     display_name: string | null;
     nickname: string | null;
   } | null;
@@ -48,7 +49,9 @@ export default function GearPage() {
     const userId = userData.user?.id;
 
     const [profileResult, itemsResult, requestsResult] = await Promise.all([
-      userId ? supabase.from("profiles").select("*").eq("id", userId).single() : Promise.resolve({ data: null }),
+      userId
+        ? supabase.from("profiles").select("*").eq("id", userId).single()
+        : Promise.resolve({ data: null, error: null }),
       supabase
         .from("items")
         .select("*, owner:profiles!items_owner_id_fkey(display_name,nickname)")
@@ -56,14 +59,33 @@ export default function GearPage() {
         .order("created_at", { ascending: false }),
       supabase
         .from("gear_requests")
-        .select("*, profile:profiles!gear_requests_user_id_fkey(display_name,nickname)")
+        .select("*")
         .is("deleted_at", null)
         .order("created_at", { ascending: false })
     ]);
 
+    if (profileResult.error) setError(profileResult.error.message);
+    if (itemsResult.error) setError(itemsResult.error.message);
+    if (requestsResult.error) setError(requestsResult.error.message);
+
+    const requestRows = (requestsResult.data || []) as GearRequest[];
+    const requestUserIds = Array.from(new Set(requestRows.map((request) => request.user_id)));
+    const requestProfilesResult =
+      requestUserIds.length > 0
+        ? await supabase.from("profiles").select("id,display_name,nickname").in("id", requestUserIds)
+        : { data: [] };
+    const requestProfileMap = new Map(
+      (requestProfilesResult.data || []).map((requestProfile) => [requestProfile.id, requestProfile])
+    );
+
     setProfile(profileResult.data as Profile | null);
     setItems((itemsResult.data || []) as unknown as Item[]);
-    setRequests((requestsResult.data || []) as unknown as GearRequest[]);
+    setRequests(
+      requestRows.map((request) => ({
+        ...request,
+        profile: requestProfileMap.get(request.user_id) || null
+      }))
+    );
     setLoading(false);
   }
 
@@ -88,16 +110,31 @@ export default function GearPage() {
     if (!profile) return;
     const form = event.currentTarget;
     const formData = new FormData(form);
+    const title = String(formData.get("title") || "").trim();
+    const detail = String(formData.get("detail") || "").trim();
+    const desiredStartDate = String(formData.get("desired_start_date") || "");
+    const desiredEndDate = String(formData.get("desired_end_date") || "");
+
+    if (!title) {
+      setError("タイトルを入力してください。");
+      return;
+    }
+
+    if (desiredStartDate && desiredEndDate && desiredStartDate > desiredEndDate) {
+      setError("希望開始日は希望終了日より前の日付にしてください。");
+      return;
+    }
+
     setBusy(true);
     setError(null);
     setMessage(null);
     const supabase = createClient();
     const { error: insertError } = await supabase.from("gear_requests").insert({
       user_id: profile.id,
-      title: String(formData.get("title") || ""),
-      detail: String(formData.get("detail") || ""),
-      desired_start_date: String(formData.get("desired_start_date") || "") || null,
-      desired_end_date: String(formData.get("desired_end_date") || "") || null
+      title,
+      detail,
+      desired_start_date: desiredStartDate || null,
+      desired_end_date: desiredEndDate || null
     });
     setBusy(false);
     if (insertError) {
