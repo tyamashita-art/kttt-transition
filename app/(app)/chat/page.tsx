@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 type Room = Database["public"]["Tables"]["chat_rooms"]["Row"];
+type Event = Database["public"]["Tables"]["events"]["Row"];
 
 export default function ChatPage() {
   const searchParams = useSearchParams();
@@ -23,14 +24,24 @@ export default function ChatPage() {
     const supabase = createClient();
     supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) return;
-      const [profileResult, roomsResult] = await Promise.all([
+      const [profileResult, roomsResult, eventsResult] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", data.user.id).single(),
-        supabase.from("chat_rooms").select("*").is("deleted_at", null).order("created_at", { ascending: true })
+        supabase.from("chat_rooms").select("*").is("deleted_at", null).order("created_at", { ascending: true }),
+        supabase.from("events").select("id").is("deleted_at", null)
       ]);
-      const nextRooms = roomsResult.data || [];
+      const activeEventIds = new Set(((eventsResult.data || []) as Pick<Event, "id">[]).map((event) => event.id));
+      const nextRooms = (roomsResult.data || []).filter((room) => {
+        if (room.room_type !== "event") return true;
+        return Boolean(room.related_id && activeEventIds.has(room.related_id));
+      });
       setProfile(profileResult.data);
       setRooms(nextRooms);
-      setSelectedRoomId((current) => current || requestedRoomId || nextRooms[0]?.id || null);
+      setSelectedRoomId((current) => {
+        const currentRoom = current ? nextRooms.find((room) => room.id === current) : null;
+        if (currentRoom) return currentRoom.id;
+        const requestedRoom = requestedRoomId ? nextRooms.find((room) => room.id === requestedRoomId) : null;
+        return requestedRoom?.id || nextRooms[0]?.id || null;
+      });
       setLoading(false);
     });
   }, [requestedRoomId]);
