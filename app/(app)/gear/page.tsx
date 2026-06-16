@@ -2,7 +2,7 @@
 
 import { CheckCircle2, ClipboardList, Filter, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { LoadingCard } from "@/components/loading-card";
 import { StatusPill, statusTone } from "@/components/status-pill";
@@ -90,6 +90,9 @@ export default function GearPage() {
   }
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("tab") === "requests") setTab("requests");
+    if (params.get("created") === "request") setMessage("借りたいギアを投稿しました。");
     load();
   }, []);
 
@@ -104,47 +107,6 @@ export default function GearPage() {
       );
     });
   }, [categoryGroup, categoryItem, items]);
-
-  async function createGearRequest(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!profile) return;
-    const form = event.currentTarget;
-    const formData = new FormData(form);
-    const title = String(formData.get("title") || "").trim();
-    const detail = String(formData.get("detail") || "").trim();
-    const desiredStartDate = String(formData.get("desired_start_date") || "");
-    const desiredEndDate = String(formData.get("desired_end_date") || "");
-
-    if (!title) {
-      setError("タイトルを入力してください。");
-      return;
-    }
-
-    if (desiredStartDate && desiredEndDate && desiredStartDate > desiredEndDate) {
-      setError("希望開始日は希望終了日より前の日付にしてください。");
-      return;
-    }
-
-    setBusy(true);
-    setError(null);
-    setMessage(null);
-    const supabase = createClient();
-    const { error: insertError } = await supabase.from("gear_requests").insert({
-      user_id: profile.id,
-      title,
-      detail,
-      desired_start_date: desiredStartDate || null,
-      desired_end_date: desiredEndDate || null
-    });
-    setBusy(false);
-    if (insertError) {
-      setError(insertError.message);
-      return;
-    }
-    form.reset();
-    setMessage("借りたいギアを投稿しました。");
-    await load();
-  }
 
   async function updateRequest(request: GearRequest, status: GearRequestStatus) {
     await run(async () => {
@@ -192,10 +154,10 @@ export default function GearPage() {
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">貸したい機材、借りたい機材をチーム内で回す。</p>
         </div>
         <Link
-          href="/gear/new"
+          href={tab === "requests" ? "/gear/requests/new" : "/gear/new"}
           className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-slate-900 text-white shadow-sm active:scale-95 dark:bg-red-500 dark:text-white"
-          aria-label="ギア登録"
-          title="ギア登録"
+          aria-label={tab === "requests" ? "借りたい投稿作成" : "ギア登録"}
+          title={tab === "requests" ? "借りたい投稿作成" : "ギア登録"}
         >
           <Plus size={21} />
         </Link>
@@ -297,28 +259,8 @@ export default function GearPage() {
         </>
       ) : (
         <>
-          <section className="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <h3 className="font-black">こんなギアを借りたい</h3>
-            <form onSubmit={createGearRequest} className="mt-3 space-y-3">
-              <Input name="title" label="タイトル" placeholder="DHバーを借りたい" required />
-              <Textarea name="detail" label="詳細" rows={3} placeholder="大会までの練習で使いたい、サイズ感を試したい、など" />
-              <div className="grid grid-cols-2 gap-3">
-                <Input name="desired_start_date" label="希望開始" type="date" />
-                <Input name="desired_end_date" label="希望終了" type="date" />
-              </div>
-              <button
-                type="submit"
-                disabled={busy}
-                className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-slate-900 font-black text-white active:scale-[0.99] disabled:opacity-60 dark:bg-red-500 dark:text-white"
-              >
-                <Plus size={17} />
-                投稿する
-              </button>
-            </form>
-          </section>
-
           {loading ? <LoadingCard /> : null}
-          {!loading && requests.length === 0 ? <EmptyState title="借りたい投稿はありません" body="探している機材を投稿できます。" /> : null}
+          {!loading && requests.length === 0 ? <EmptyState title="借りたい投稿はありません" body="右上の＋から探している機材を投稿できます。" /> : null}
 
           <div className="grid gap-3">
             {requests.map((request) => {
@@ -403,55 +345,4 @@ function TabButton({
 
 function MiniBadge({ label }: { label: string }) {
   return <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-black text-slate-600 dark:bg-slate-800 dark:text-slate-200">{label}</span>;
-}
-
-function Input({
-  label,
-  name,
-  type = "text",
-  placeholder,
-  required
-}: {
-  label: string;
-  name: string;
-  type?: string;
-  placeholder?: string;
-  required?: boolean;
-}) {
-  return (
-    <label className="block text-sm font-black">
-      {label}
-      <input
-        name={name}
-        type={type}
-        placeholder={placeholder}
-        required={required}
-        className="mt-2 h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-base outline-none ring-accent focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
-      />
-    </label>
-  );
-}
-
-function Textarea({
-  label,
-  name,
-  rows,
-  placeholder
-}: {
-  label: string;
-  name: string;
-  rows: number;
-  placeholder?: string;
-}) {
-  return (
-    <label className="block text-sm font-black">
-      {label}
-      <textarea
-        name={name}
-        rows={rows}
-        placeholder={placeholder}
-        className="mt-2 w-full resize-none rounded-md border border-slate-200 bg-white px-3 py-3 text-base leading-6 outline-none ring-accent focus:ring-2 dark:border-slate-700 dark:bg-slate-950"
-      />
-    </label>
-  );
 }
