@@ -32,6 +32,17 @@ type Message = Database["public"]["Tables"]["chat_messages"]["Row"] & {
   } | null;
 };
 
+const triathletePushLines = [
+  "言い訳は置いて、まず10分動こう。",
+  "最後の1本が、次のレースの武器になる。",
+  "今日は昨日の自分を少しだけ置き去りにしよう。",
+  "脚が重い日は、心拍だけでも前に出す。",
+  "積み上げた人だけが、レース当日に笑える。",
+  "泳いで、回して、走って、今日を勝ち切ろう。",
+  "楽に終わる日は、強くなる余白を逃している。",
+  "淡々とやる人が、最後にいちばん強い。"
+];
+
 export default function HomePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [nextEvents, setNextEvents] = useState<Event[]>([]);
@@ -39,9 +50,16 @@ export default function HomePage() {
   const [pendingApprovals, setPendingApprovals] = useState<Rental[]>([]);
   const [notices, setNotices] = useState<Notice[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [todayLabel, setTodayLabel] = useState("");
+  const [heroLine, setHeroLine] = useState(triathletePushLines[0]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const today = new Date();
+    const phraseIndex = Math.floor(Math.random() * triathletePushLines.length);
+    setTodayLabel(formatHeroDate(today));
+    setHeroLine(triathletePushLines[phraseIndex]);
+
     const supabase = createClient();
     supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) return;
@@ -99,10 +117,36 @@ export default function HomePage() {
     <div className="space-y-4">
       <section className="rounded-md bg-slate-900 p-5 text-white shadow-soft dark:bg-slate-900">
         <p className="text-xs font-black uppercase tracking-[0.16em] text-red-300">KTTT Transition</p>
-        <h2 className="mt-2 text-2xl font-black leading-8">
-          {profile.nickname || profile.display_name || "メンバー"}さん、今日も動ける準備を。
-        </h2>
+        <h2 className="mt-2 text-2xl font-black leading-8">{todayLabel}</h2>
+        <p className="mt-3 text-lg font-black leading-7 text-slate-100">{heroLine}</p>
       </section>
+
+      <DashboardCard icon={<Sparkles size={18} />} title="チームポリシー" href="/about">
+        <div className="rounded-md bg-slate-50 p-3 dark:bg-slate-950">
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-accent dark:text-red-300">
+            {teamConcept.subtitle}
+          </p>
+          <p className="mt-2 text-lg font-black leading-6">{teamConcept.tagline}</p>
+          <p className="mt-2 line-clamp-3 text-sm font-bold leading-6 text-slate-600 dark:text-slate-300">
+            {teamConcept.body[1]}
+          </p>
+        </div>
+      </DashboardCard>
+
+      <DashboardCard icon={<Bell size={18} />} title="チームお知らせ" href="/notices">
+        {notices.length === 0 ? (
+          <EmptyState title="お知らせはまだありません" />
+        ) : (
+          <div className="space-y-3">
+            {notices.map((notice) => (
+              <div key={notice.id} className="rounded-md bg-slate-50 p-3 dark:bg-slate-950">
+                <p className="font-black">{notice.title}</p>
+                <p className="mt-1 line-clamp-2 text-sm font-bold text-slate-500 dark:text-slate-400">{notice.body}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </DashboardCard>
 
       <DashboardCard
         icon={<CalendarDays size={18} />}
@@ -179,34 +223,17 @@ export default function HomePage() {
         )}
       </DashboardCard>
 
-      <DashboardCard icon={<Bell size={18} />} title="チームお知らせ" href="/notices">
-        {notices.length === 0 ? (
-          <EmptyState title="お知らせはまだありません" />
-        ) : (
-          <div className="space-y-3">
-            {notices.map((notice) => (
-              <div key={notice.id} className="rounded-md bg-slate-50 p-3 dark:bg-slate-950">
-                <p className="font-black">{notice.title}</p>
-                <p className="mt-1 line-clamp-2 text-sm font-bold text-slate-500 dark:text-slate-400">{notice.body}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </DashboardCard>
-
-      <DashboardCard icon={<Sparkles size={18} />} title="チーム概要" href="/about">
-        <div className="rounded-md bg-slate-50 p-3 dark:bg-slate-950">
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-accent dark:text-red-300">
-            {teamConcept.subtitle}
-          </p>
-          <p className="mt-2 text-lg font-black leading-6">{teamConcept.tagline}</p>
-          <p className="mt-2 line-clamp-3 text-sm font-bold leading-6 text-slate-600 dark:text-slate-300">
-            {teamConcept.body[1]}
-          </p>
-        </div>
-      </DashboardCard>
     </div>
   );
+}
+
+function formatHeroDate(date: Date) {
+  return new Intl.DateTimeFormat("ja-JP", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "short"
+  }).format(date);
 }
 
 function DashboardCard({
