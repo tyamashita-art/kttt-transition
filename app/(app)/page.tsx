@@ -32,15 +32,27 @@ type Message = Database["public"]["Tables"]["chat_messages"]["Row"] & {
   } | null;
 };
 
-const triathletePushLines = [
-  "言い訳は置いて、まず10分動こう。",
-  "最後の1本が、次のレースの武器になる。",
-  "今日は昨日の自分を少しだけ置き去りにしよう。",
-  "脚が重い日は、心拍だけでも前に出す。",
-  "積み上げた人だけが、レース当日に笑える。",
-  "泳いで、回して、走って、今日を勝ち切ろう。",
-  "楽に終わる日は、強くなる余白を逃している。",
-  "淡々とやる人が、最後にいちばん強い。"
+const dailyTriathlonQuotes = [
+  "昨日より一歩でも前へ。それが強さの正体だ。",
+  "苦しい時間は、未来の自分への仕送りである。",
+  "泳いだ距離、回した脚、刻んだ一歩は裏切らない。",
+  "限界は壁ではない。今日の練習メニューだ。",
+  "レース当日に自信をくれるのは、今日逃げなかった自分だ。",
+  "速さより先に、続ける強さを育てよう。",
+  "しんどい日は、強くなる入口に立っている。",
+  "楽しいだけでは終わらない。悔しさまで味わって強くなる。",
+  "淡々と積む人が、最後の直線でいちばん伸びる。",
+  "トライアスロンは一日で強くならない。だから今日やる。",
+  "心拍が上がるほど、迷いは静かになる。",
+  "小さな継続は、やがて大きな自信になる。",
+  "今日の一本を雑にしない。レースはそこを見ている。",
+  "疲れている日こそ、フォームと心を整える日だ。",
+  "自分を追い込める人は、自分を信じられる人だ。",
+  "完璧な練習より、やめなかった練習が残る。",
+  "強い人は特別ではない。今日もやる人だ。",
+  "Swim, Bike, Run. 迷ったら、まず動け。",
+  "レースはごまかせない。だから練習は面白い。",
+  "人生を楽しみつくす体力を、今日もつくろう。"
 ];
 
 export default function HomePage() {
@@ -51,14 +63,13 @@ export default function HomePage() {
   const [notices, setNotices] = useState<Notice[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [todayLabel, setTodayLabel] = useState("");
-  const [heroLine, setHeroLine] = useState(triathletePushLines[0]);
+  const [heroLine, setHeroLine] = useState(dailyTriathlonQuotes[0]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const today = new Date();
-    const phraseIndex = Math.floor(Math.random() * triathletePushLines.length);
     setTodayLabel(formatHeroDate(today));
-    setHeroLine(triathletePushLines[phraseIndex]);
+    setHeroLine(getDailyQuote(today));
 
     const supabase = createClient();
     supabase.auth.getUser().then(async ({ data }) => {
@@ -116,9 +127,11 @@ export default function HomePage() {
   return (
     <div className="space-y-4">
       <section className="rounded-md bg-slate-900 p-5 text-white shadow-soft dark:bg-slate-900">
-        <p className="text-xs font-black uppercase tracking-[0.16em] text-red-300">KTTT Transition</p>
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-red-300">
+          KTTT 日めくり名言
+        </p>
         <h2 className="mt-2 text-2xl font-black leading-8">{todayLabel}</h2>
-        <p className="mt-3 text-lg font-black leading-7 text-slate-100">{heroLine}</p>
+        <p className="mt-3 text-lg font-black leading-7 text-slate-100">「{heroLine}」</p>
       </section>
 
       <DashboardCard icon={<Sparkles size={18} />} title="チームポリシー" href="/about">
@@ -234,6 +247,12 @@ function formatHeroDate(date: Date) {
     day: "numeric",
     weekday: "short"
   }).format(date);
+}
+
+function getDailyQuote(date: Date) {
+  const startOfYear = new Date(date.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((date.getTime() - startOfYear.getTime()) / 86400000);
+  return dailyTriathlonQuotes[dayOfYear % dailyTriathlonQuotes.length];
 }
 
 function DashboardCard({
