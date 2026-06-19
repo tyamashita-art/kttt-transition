@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   if (!code && (!tokenHash || !type)) {
     return redirectToLoginWithError(
       requestUrl,
-      "メール認証リンクを確認できませんでした。確認メールのリンクをもう一度開いてください。"
+      "認証リンクを確認できませんでした。メール内のリンクをもう一度開いてください。"
     );
   }
 
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
   if (error) {
     return redirectToLoginWithError(
       requestUrl,
-      "メール認証に失敗しました。リンクの有効期限が切れている場合は、もう一度登録してください。"
+      "認証リンクの処理に失敗しました。リンクの有効期限が切れている場合は、もう一度メールを送信してください。"
     );
   }
 

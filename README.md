@@ -49,7 +49,7 @@ Then open **Authentication -> URL Configuration**:
   - `http://localhost:3001/**`
   - `http://localhost:3002/**`
 
-The app sends signup confirmation links to `/auth/callback?next=/login?verified=1`. That callback exchanges the Supabase auth code, then returns the user to the login screen with a success message. `/dashboard` also exists as an alias for `/`.
+The app sends signup confirmation links to `/auth/callback?next=/login?verified=1`. It sends password recovery links to `/auth/callback?next=/reset-password`. That callback exchanges the Supabase auth code, then returns the user to the correct screen. `/dashboard` also exists as an alias for `/`.
 
 When `NEXT_PUBLIC_SITE_URL` is set, local signup and resend actions also generate production confirmation redirects. Remove `NEXT_PUBLIC_SITE_URL` only when you intentionally need local auth callback testing.
 

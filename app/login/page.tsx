@@ -1,10 +1,9 @@
 "use client";
 
-import { Loader2, LogIn, MailCheck } from "lucide-react";
+import { Loader2, LogIn } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
-import { getAuthCallbackUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/client";
 
 function getAuthErrorMessage(message: string) {
@@ -12,6 +11,10 @@ function getAuthErrorMessage(message: string) {
 
   if (normalized.includes("email rate limit exceeded")) {
     return "確認メールの送信上限に達しました。しばらく時間をおいてから再度お試しください。";
+  }
+
+  if (normalized.includes("invalid login credentials")) {
+    return "メールアドレスまたはパスワードが違います。パスワードが分からない場合は再設定してください。";
   }
 
   return message;
@@ -24,13 +27,16 @@ export default function LoginPage() {
   const [info, setInfo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [resending, setResending] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
 
     if (params.get("verified") === "1") {
       setInfo("メール認証が完了しました。ログインしてKTTT Transitionを開始できます。");
+    }
+
+    if (params.get("reset") === "1") {
+      setInfo("パスワードを更新しました。新しいパスワードでログインしてください。");
     }
 
     if (params.get("auth_error") === "1") {
@@ -53,45 +59,14 @@ export default function LoginPage() {
 
     if (signInError) {
       const friendlyError = signInError.message.toLowerCase().includes("email not confirmed")
-        ? "メール認証がまだ完了していません。確認メールのリンクを開いてからログインしてください。"
-        : signInError.message;
+        ? "メール認証がまだ完了していません。登録画面から確認メールを再送し、メール内リンクを開いてください。"
+        : getAuthErrorMessage(signInError.message);
       setError(friendlyError);
       return;
     }
 
     router.replace("/");
     router.refresh();
-  }
-
-  async function resendConfirmation() {
-    const normalizedEmail = email.trim().toLowerCase();
-
-    if (!normalizedEmail) {
-      setError("確認メールを再送するメールアドレスを入力してください。");
-      return;
-    }
-
-    setError(null);
-    setInfo(null);
-    setResending(true);
-
-    const supabase = createClient();
-    const { error: resendError } = await supabase.auth.resend({
-      type: "signup",
-      email: normalizedEmail,
-      options: {
-        emailRedirectTo: getAuthCallbackUrl("/login?verified=1")
-      }
-    });
-
-    setResending(false);
-
-    if (resendError) {
-      setError(getAuthErrorMessage(resendError.message));
-      return;
-    }
-
-    setInfo(`${normalizedEmail} に確認メールを再送しました。最新のメール内リンクを開いてください。`);
   }
 
   return (
@@ -149,22 +124,18 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={loading || resending}
+            disabled={loading}
             className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-md bg-slate-900 font-black text-white transition active:scale-[0.99] disabled:opacity-60 dark:bg-red-500 dark:text-white"
           >
             {loading ? <Loader2 className="animate-spin" size={18} /> : <LogIn size={18} />}
             ログイン
           </button>
 
-          <button
-            type="button"
-            onClick={resendConfirmation}
-            disabled={loading || resending || !email.trim()}
-            className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white font-black text-slate-800 transition active:scale-[0.99] disabled:opacity-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-          >
-            {resending ? <Loader2 className="animate-spin" size={18} /> : <MailCheck size={18} />}
-            確認メールを再送
-          </button>
+          <div className="mt-4 text-center text-sm">
+            <Link href="/forgot-password" className="font-black text-accent dark:text-red-300">
+              パスワードを忘れた方
+            </Link>
+          </div>
         </form>
 
         <p className="mt-5 text-center text-sm text-slate-600 dark:text-slate-300">
